@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ShoSho.Core/ShoSho.Core.csproj" />
+    <Project Path="src/ShoSho.Infrastructure/ShoSho.Infrastructure.csproj" />
+    <Project Path="src/ShoSho.UI/ShoSho.UI.csproj" />
+  </Folder>
+</Solution>
