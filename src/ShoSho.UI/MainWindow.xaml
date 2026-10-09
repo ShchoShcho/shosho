@@ -5,67 +5,214 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:ShoSho.UI.ViewModels"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel}"
-        Title="ШоШо" Height="500" Width="600"
-        WindowStartupLocation="CenterScreen">
+        d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel, IsDesignTimeCreatable=True}"
+        Title="Шо-Шо" Height="700" Width="1000"
+        MinHeight="500" MinWidth="800"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4EFEA"
+        FontFamily="Segoe UI">
 
-    <Grid Margin="15">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Background="#261E1A" Padding="20,30,20,20">
+            <StackPanel>
+                <TextBlock Text="Шо-Шо"
+                           FontSize="28"
+                           FontWeight="Normal"
+                           FontFamily="Georgia"
+                           Foreground="#EAE0D5" />
+                <TextBlock Text="ОСОБИСТИЙ МЕДІААРХІВ"
+                           FontSize="10"
+                           Foreground="#8A7A71"
+                           Margin="0,4,0,30" />
 
-        <!-- Заголовок -->
-        <TextBlock Grid.Row="0"
-                   Text="ШоШо"
-                   FontSize="22"
-                   FontWeight="Bold"
-                   Margin="0,0,0,15" />
+                <TextBlock Text="КОЛЕКЦІЯ"
+                           FontSize="11"
+                           Foreground="#78685E"
+                           Margin="0,0,0,15"
+                           FontWeight="SemiBold" />
 
-        <!-- Панель додавання -->
-        <Grid Grid.Row="1" Margin="0,0,0,15">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+                <TextBlock Text="Усі враження" FontSize="14" Foreground="#F4EFEA" Margin="0,8"/>
+                <TextBlock Text="Фільми" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
+                <TextBlock Text="Серіали" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
+                <TextBlock Text="Книги" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
+                <TextBlock Text="Ігри" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
+            </StackPanel>
+        </Border>
 
-            <TextBox Grid.Column="0"
-                     Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}"
-                     Padding="6,4"
-                     VerticalContentAlignment="Center"
-                     Margin="0,0,10,0" />
+        <Grid Grid.Column="1" Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-            <Button Grid.Column="1"
-                    Command="{Binding AddItemCommand}"
-                    Content="Додати"
-                    Padding="16,4"
-                    IsDefault="True" />
+            <StackPanel Grid.Row="0" Margin="0,0,0,25">
+                <TextBlock Text="МОЯ КОЛЕКЦІЯ - 2026"
+                           FontSize="11"
+                           Foreground="#B89F89"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,5" />
+                <TextBlock Text="Каталог вражень"
+                           FontSize="32"
+                           FontFamily="Georgia"
+                           Foreground="#2C221E" />
+                <TextBlock Text="Фільми, книжки й світи, до яких хочеться повернутися."
+                           FontSize="14"
+                           Foreground="#78685E"
+                           Margin="0,6,0,0" />
+            </StackPanel>
+
+            <!-- Input Bar -->
+            <Border Grid.Row="1"
+                    Background="#FAF6F0"
+                    CornerRadius="8"
+                    Padding="12"
+                    Margin="0,0,0,20"
+                    BorderBrush="#D4C9BC"
+                    BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox x:Name="ItemTitleTextBox"
+                             Grid.Column="0"
+                             Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="15"
+                             VerticalContentAlignment="Center"
+                             Padding="12,10"
+                             BorderThickness="1"
+                             BorderBrush="#E3DCD2"
+                             Background="White"
+                             Foreground="#2C221E"
+                             Margin="0,0,10,0"
+                             ToolTip="Введіть назву фільму, серіалу або гри" />
+
+                    <Button Grid.Column="1"
+                            Command="{Binding AddItemCommand}"
+                            Content="Додати"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Background="#D08770"
+                            BorderThickness="0"
+                            Padding="24,10"
+                            Cursor="Hand"
+                            IsDefault="True">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6" />
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Media Items List -->
+            <Border Grid.Row="2"
+                    Background="#FAF6F0"
+                    CornerRadius="8"
+                    Padding="16"
+                    BorderBrush="#D4C9BC"
+                    BorderThickness="1">
+                <Grid>
+                    <TextBlock Text="Поки що немає збережених записів. Додайте свій перший фільм чи гру вище!"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="#A3968C"
+                               FontSize="14"
+                               FontStyle="Italic">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Items.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <ListBox ItemsSource="{Binding Items}"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,10" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <ContentPresenter />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="White"
+                                        BorderBrush="#E8E2D8"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="16,12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="16"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#2C221E" />
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='Створено: {0:dd.MM.yyyy HH:mm}'}"
+                                                       FontSize="12"
+                                                       Foreground="#A3968C"
+                                                       Margin="0,4,0,0" />
+                                        </StackPanel>
+
+                                        <Border Grid.Column="1"
+                                                Background="#EFECE6"
+                                                BorderBrush="#D4CBC0"
+                                                BorderThickness="1"
+                                                CornerRadius="12"
+                                                Padding="12,5"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Status}"
+                                                       FontSize="12"
+                                                       FontWeight="Medium"
+                                                       Foreground="#594A42" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Status Bar -->
+            <StatusBar Grid.Row="3"
+                       Background="Transparent"
+                       Margin="0,12,0,0"
+                       Padding="0">
+                <StatusBarItem Padding="0">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="12"
+                               Foreground="#78685E" />
+                </StatusBarItem>
+            </StatusBar>
         </Grid>
-
-        <!-- Список карток -->
-        <ListBox Grid.Row="2"
-                 ItemsSource="{Binding Items}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <DockPanel Margin="4">
-                        <TextBlock DockPanel.Dock="Right"
-                                   Text="{Binding Status}"
-                                   Foreground="Gray"
-                                   Margin="10,0,0,0" />
-                        <TextBlock Text="{Binding Title}"
-                                   FontWeight="Medium" />
-                    </DockPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-
-        <!-- Статус бар -->
-        <StatusBar Grid.Row="3" Margin="0,10,0,0">
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusMessage}" />
-            </StatusBarItem>
-        </StatusBar>
     </Grid>
 </Window>
