@@ -1,3 +1,4 @@
+using ShoSho.UI.Services;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -62,6 +63,16 @@ public partial class MainViewModel : ObservableObject
             Items.Clear();
             foreach (var item in items)
             {
+                // Кешуємо зображення: якщо це веб-посилання, завантажуємо локально і підміняємо шлях для UI
+                if (!string.IsNullOrWhiteSpace(item.PosterUrl) && item.PosterUrl.StartsWith("http"))
+                {
+                    var localPath = await ImageCacheService.GetLocalPosterAsync(item.PosterUrl);
+                    if (localPath != null)
+                    {
+                        item.PosterUrl = localPath;
+                    }
+                }
+
                 Items.Add(item);
             }
 
