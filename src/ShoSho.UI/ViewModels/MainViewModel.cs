@@ -28,7 +28,6 @@ public partial class MainViewModel : ObservableObject
         _dbContextFactory = dbContextFactory;
     }
 
-    // Default parameterless constructor for XAML design-time / fallback
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
@@ -44,7 +43,6 @@ public partial class MainViewModel : ObservableObject
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             
-            // Застосовуємо міграції автоматично при старті, щоб БД та таблиці були гарантовано створені
             await db.Database.MigrateAsync();
 
             var items = await db.MediaItems
@@ -96,7 +94,6 @@ public partial class MainViewModel : ObservableObject
             db.MediaItems.Add(newItem);
             await db.SaveChangesAsync();
 
-            // Додаємо новий елемент на початок списку
             Items.Insert(0, newItem);
             NewItemTitle = string.Empty;
             StatusMessage = $"Картку «{title}» успішно збережено!";
@@ -115,11 +112,7 @@ public partial class MainViewModel : ObservableObject
     {
         public ShoShoDbContext CreateDbContext()
         {
-            var options = new DbContextOptionsBuilder<ShoShoDbContext>()
-                .UseNpgsql(ShoShoDbContext.DefaultConnectionString)
-                .Options;
-            return new ShoShoDbContext(options);
+            return new ShoShoDbContext();
         }
     }
 }
-

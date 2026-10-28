@@ -8,7 +8,7 @@ public class ShoShoDbContextFactory : IDesignTimeDbContextFactory<ShoShoDbContex
     public ShoShoDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ShoShoDbContext>();
-        optionsBuilder.UseNpgsql(ShoShoDbContext.DefaultConnectionString);
+        ShoShoDbContext.Configure(optionsBuilder, ShoShoDbContext.DefaultConnectionString);
         return new ShoShoDbContext(optionsBuilder.Options);
     }
 }
