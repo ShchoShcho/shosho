@@ -112,3 +112,9 @@ Desktop.ini
 ~$*
 *~
 *.bak
+
+# Local SQLite databases and journal files
+*.db
+*.db-wal
+*.db-shm
+*.db-journal

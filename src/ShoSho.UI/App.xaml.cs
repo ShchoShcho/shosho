@@ -31,7 +31,7 @@ public partial class App : Application
 
         services.AddPooledDbContextFactory<ShoShoDbContext>(options =>
         {
-            options.UseNpgsql(connectionString);
+            ShoShoDbContext.Configure(options, connectionString);
         });
 
         services.AddTransient<MainViewModel>();

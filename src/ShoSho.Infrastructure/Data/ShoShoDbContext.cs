@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using ShoSho.Core.Models;
 
 namespace ShoSho.Infrastructure.Data;
 
 public class ShoShoDbContext : DbContext
 {
-    public const string DefaultConnectionString = "Host=localhost;Port=5432;Database=shosho_db;Username=postgres;Password=postgres";
+    public const string DefaultConnectionString = "Data Source=shosho.db";
 
     public DbSet<MediaItem> MediaItems { get; set; } = null!;
 
@@ -18,11 +19,29 @@ public class ShoShoDbContext : DbContext
     {
     }
 
+    public static void Configure(DbContextOptionsBuilder optionsBuilder, string connectionString)
+    {
+        var connection = new SqliteConnectionStringBuilder(connectionString);
+        if (connection.DataSource != ":memory:" && connection.Mode != SqliteOpenMode.Memory)
+        {
+            if (string.IsNullOrWhiteSpace(connection.DataSource))
+                throw new ArgumentException("SQLite database file must be specified.", nameof(connectionString));
+
+            // Relative paths are per-user and independent of the working directory.
+            var dataDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ShoSho");
+            connection.DataSource = Path.GetFullPath(connection.DataSource, dataDirectory);
+            Directory.CreateDirectory(Path.GetDirectoryName(connection.DataSource)!);
+        }
+
+        optionsBuilder.UseSqlite(connection.ToString());
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseNpgsql(DefaultConnectionString);
+            Configure(optionsBuilder, DefaultConnectionString);
         }
     }
 
@@ -37,8 +56,10 @@ public class ShoShoDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
             entity.Property(e => e.PosterUrl).HasMaxLength(1000);
-            entity.Property(e => e.CreatedAt).HasColumnType("timestamp with time zone");
+
+            entity.Property(e => e.CreatedAt).HasConversion(
+                value => value.ToUniversalTime(),
+                value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
         });
     }
 }
-
