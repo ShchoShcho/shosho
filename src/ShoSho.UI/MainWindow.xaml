@@ -71,7 +71,7 @@
             <Border Grid.Row="1"
                     Background="#FAF6F0"
                     CornerRadius="8"
-                    Padding="12"
+                    Padding="16"
                     Margin="0,0,0,20"
                     BorderBrush="#D4C9BC"
                     BorderThickness="1">
@@ -81,28 +81,21 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBox x:Name="ItemTitleTextBox"
-                             Grid.Column="0"
-                             Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}"
-                             FontSize="15"
-                             VerticalContentAlignment="Center"
-                             Padding="12,10"
-                             BorderThickness="1"
-                             BorderBrush="#E3DCD2"
-                             Background="White"
-                             Foreground="#2C221E"
-                             Margin="0,0,10,0"
-                             ToolTip="Введіть назву фільму, серіалу або гри" />
+                    <TextBlock Grid.Column="0"
+                               Text="Натисніть кнопку, щоб додати новий фільм, серіал, книгу чи гру"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="#78685E" />
 
                     <Button Grid.Column="1"
                             Command="{Binding AddItemCommand}"
-                            Content="Додати"
+                            Content="+ Додати запис"
                             FontSize="14"
                             FontWeight="SemiBold"
                             Foreground="White"
                             Background="#D08770"
                             BorderThickness="0"
-                            Padding="24,10"
+                            Padding="20,10"
                             Cursor="Hand"
                             IsDefault="True">
                         <Button.Resources>
