@@ -31,6 +31,15 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
+        // Тестовий запис для перевірки плейсхолдера та сітки без запуску програми
+        Items.Add(new MediaItem
+        {
+            Id = Guid.NewGuid(),
+            Title = "Тестовий фільм",
+            PosterUrl = null,
+            Status = MediaStatusExtensions.Planned,
+            CreatedAt = DateTime.UtcNow
+        });
     }
 
     [RelayCommand]
@@ -42,7 +51,8 @@ public partial class MainViewModel : ObservableObject
             StatusMessage = "Підключення до бази даних...";
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            
+
+            // Застосовуємо міграції автоматично при старті, щоб БД та таблиці були гарантовано створені
             await db.Database.MigrateAsync();
 
             var items = await db.MediaItems
