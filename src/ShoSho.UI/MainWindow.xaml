@@ -101,9 +101,9 @@
 
                                             <!-- Обкладинка (Рядок 0) -->
                                             <Image Grid.Row="0" 
-                                                   Source="{Binding PosterUrl, TargetNullValue='pack://application:,,,/Assets/placeholder.jpg', FallbackValue='pack://application:,,,/Assets/placeholder.jpg'}" 
+                                                   Source="{Binding PosterUrl, IsAsync=True, TargetNullValue='pack://application:,,,/Assets/placeholder.jpg', FallbackValue='pack://application:,,,/Assets/placeholder.jpg'}" 
                                                    Stretch="UniformToFill" 
-                                                   VerticalAlignment="Center"/>
+                                                   VerticalAlignment="Center"/> 
 
                                             <!-- Блок з текстом (Рядок 1 - тепер чітко під картинкою) -->
                                             <Border Grid.Row="1" Background="#261E1A" Padding="8,10">
