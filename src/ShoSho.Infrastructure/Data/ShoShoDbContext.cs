@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using ShoSho.Core.Models;
+using System;
+using System.IO;
 
 namespace ShoSho.Infrastructure.Data;
 
@@ -9,6 +11,7 @@ public class ShoShoDbContext : DbContext
     public const string DefaultConnectionString = "Data Source=shosho.db";
 
     public DbSet<MediaItem> MediaItems { get; set; } = null!;
+    public DbSet<Tag> Tags { get; set; } = null!;
 
     public ShoShoDbContext()
     {
@@ -60,6 +63,13 @@ public class ShoShoDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasConversion(
                 value => value.ToUniversalTime(),
                 value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+        });
+
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.Name).IsUnique();
         });
     }
 }

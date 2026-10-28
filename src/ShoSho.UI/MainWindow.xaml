@@ -67,7 +67,6 @@
                            Margin="0,6,0,0" />
             </StackPanel>
 
-            <!-- Input Bar -->
             <Border Grid.Row="1"
                     Background="#FAF6F0"
                     CornerRadius="8"
@@ -76,35 +75,32 @@
                     BorderBrush="#D4C9BC"
                     BorderThickness="1">
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBox x:Name="ItemTitleTextBox"
-                             Grid.Column="0"
+                    <TextBox Grid.Row="0" Grid.Column="0"
                              Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}"
-                             FontSize="15"
-                             VerticalContentAlignment="Center"
-                             Padding="12,10"
-                             BorderThickness="1"
-                             BorderBrush="#E3DCD2"
-                             Background="White"
-                             Foreground="#2C221E"
-                             Margin="0,0,10,0"
+                             FontSize="15" Padding="12,10" BorderThickness="1"
+                             BorderBrush="#E3DCD2" Margin="0,0,10,10"
                              ToolTip="Введіть назву фільму, серіалу або гри" />
 
-                    <Button Grid.Column="1"
+                    <TextBox Grid.Row="1" Grid.Column="0"
+                             Text="{Binding NewItemTags, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="13" Padding="12,10" BorderThickness="1"
+                             BorderBrush="#E3DCD2" Margin="0,0,10,0"
+                             ToolTip="Введіть теги через кому (наприклад: драйв, затишне, навчання)" />
+
+                    <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
                             Command="{Binding AddItemCommand}"
-                            Content="Додати"
-                            FontSize="14"
-                            FontWeight="SemiBold"
-                            Foreground="White"
-                            Background="#D08770"
-                            BorderThickness="0"
-                            Padding="24,10"
-                            Cursor="Hand"
-                            IsDefault="True">
+                            Content="Додати" FontSize="14" FontWeight="SemiBold"
+                            Foreground="White" Background="#D08770" BorderThickness="0"
+                            Padding="24,10" Cursor="Hand" IsDefault="True">
                         <Button.Resources>
                             <Style TargetType="Border">
                                 <Setter Property="CornerRadius" Value="6" />
@@ -114,7 +110,6 @@
                 </Grid>
             </Border>
 
-            <!-- Media Items List -->
             <Border Grid.Row="2"
                     Background="#FAF6F0"
                     CornerRadius="8"
@@ -176,10 +171,25 @@
                                                        FontSize="16"
                                                        FontWeight="SemiBold"
                                                        Foreground="#2C221E" />
-                                            <TextBlock Text="{Binding CreatedAt, StringFormat='Створено: {0:dd.MM.yyyy HH:mm}'}"
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='Створено: \{0:dd.MM.yyyy HH:mm\}'}"
                                                        FontSize="12"
                                                        Foreground="#A3968C"
-                                                       Margin="0,4,0,0" />
+                                                       Margin="0,4,0,8" />
+
+                                            <ItemsControl ItemsSource="{Binding Tags}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#E5E7EB" CornerRadius="12" Margin="0,0,6,6" Padding="10,4">
+                                                            <TextBlock Text="{Binding Name}" Foreground="#374151" FontSize="12" FontWeight="SemiBold" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </StackPanel>
 
                                         <Border Grid.Column="1"
@@ -202,7 +212,6 @@
                 </Grid>
             </Border>
 
-            <!-- Status Bar -->
             <StatusBar Grid.Row="3"
                        Background="Transparent"
                        Margin="0,12,0,0"

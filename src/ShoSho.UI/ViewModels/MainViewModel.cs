@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +18,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddItemCommand))]
     private string _newItemTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _newItemTags = string.Empty;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -42,10 +49,11 @@ public partial class MainViewModel : ObservableObject
             StatusMessage = "Підключення до бази даних...";
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            
+
             await db.Database.MigrateAsync();
 
             var items = await db.MediaItems
+                .Include(m => m.Tags)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
@@ -81,21 +89,47 @@ public partial class MainViewModel : ObservableObject
             IsLoading = true;
             StatusMessage = "Збереження в базу даних...";
 
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var tagsToAssign = new List<Tag>();
+            if (!string.IsNullOrWhiteSpace(NewItemTags))
+            {
+                var tagNames = NewItemTags.Split(new[] { ',', '#' }, StringSplitOptions.RemoveEmptyEntries)
+                                          .Select(t => t.Trim().ToLower())
+                                          .Where(t => !string.IsNullOrEmpty(t))
+                                          .Distinct()
+                                          .ToList();
+
+                var existingTags = await db.Tags.Where(t => tagNames.Contains(t.Name.ToLower())).ToListAsync();
+
+                foreach (var tagName in tagNames)
+                {
+                    var tag = existingTags.FirstOrDefault(t => t.Name.ToLower() == tagName);
+                    if (tag == null)
+                    {
+                        tag = new Tag { Id = Guid.NewGuid(), Name = tagName };
+                        db.Tags.Add(tag);
+                    }
+                    tagsToAssign.Add(tag);
+                }
+            }
+
             var newItem = new MediaItem
             {
                 Id = Guid.NewGuid(),
                 Title = title,
                 Description = string.Empty,
                 Status = MediaStatusExtensions.Planned,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Tags = tagsToAssign
             };
 
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
             db.MediaItems.Add(newItem);
             await db.SaveChangesAsync();
 
             Items.Insert(0, newItem);
             NewItemTitle = string.Empty;
+            NewItemTags = string.Empty;
             StatusMessage = $"Картку «{title}» успішно збережено!";
         }
         catch (Exception ex)

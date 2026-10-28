@@ -8,5 +8,6 @@ public class MediaItem
     public string Status { get; set; } = MediaStatusExtensions.Planned;
     public string? PosterUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-}
 
+    public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+}
