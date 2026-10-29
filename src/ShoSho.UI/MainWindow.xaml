@@ -6,32 +6,78 @@
         xmlns:viewModels="clr-namespace:ShoSho.UI.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel, IsDesignTimeCreatable=True}"
-        Title="Шо-Шо" Height="700" Width="1000"
-        MinHeight="500" MinWidth="800"
+        Title="Шо-Шо | Каталог вражень" Height="760" Width="1100"
+        MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
-        Background="#F4EFEA"
+        Background="#F5EFE6"
         FontFamily="Segoe UI">
 
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#E0D6C8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#322824" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5*"/>
+            <RowDefinition Height="243*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="240" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="#261E1A" Padding="20,30,20,20">
+        <Border Grid.Column="0" Background="#2B231F" Padding="24,32,24,24" Grid.RowSpan="2">
             <StackPanel>
-                <TextBlock Text="Шо-Шо" FontSize="28" FontWeight="Normal" FontFamily="Georgia" Foreground="#EAE0D5" />
-                <TextBlock Text="ОСОБИСТИЙ МЕДІААРХІВ" FontSize="10" Foreground="#8A7A71" Margin="0,4,0,30" />
-                <TextBlock Text="КОЛЕКЦІЯ" FontSize="11" Foreground="#78685E" Margin="0,0,0,15" FontWeight="SemiBold" />
-                <TextBlock Text="Усі враження" FontSize="14" Foreground="#F4EFEA" Margin="0,8"/>
-                <TextBlock Text="Фільми" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
-                <TextBlock Text="Серіали" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
-                <TextBlock Text="Книги" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
-                <TextBlock Text="Ігри" FontSize="14" Foreground="#A3968C" Margin="0,8"/>
+                <TextBlock Text="Шо-Шо"
+                           FontSize="32"
+                           FontFamily="Georgia"
+                           Foreground="#F5EFE6"
+                           Margin="0,0,0,2" />
+                <TextBlock Text="ОСОБИСТИЙ МЕДІААРХІВ"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Foreground="#8C7A70"
+                           Margin="0,0,0,40" />
+
+                <TextBlock Text="КОЛЕКЦІЯ"
+                           FontSize="11"
+                           Foreground="#8C7A70"
+                           FontWeight="Bold"
+                           Margin="0,0,0,16" />
+
+                <Border Background="#3A302A" CornerRadius="6" Padding="12,10" Margin="-12,0,-12,8">
+                    <Grid>
+                        <TextBlock Text="Усі враження" FontSize="15" FontWeight="SemiBold" Foreground="#F5EFE6" />
+                        <TextBlock Text="{Binding Items.Count}" FontSize="13" Foreground="#8C7A70" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+                <TextBlock Text="Фільми" FontSize="15" Foreground="#A99B92" Margin="0,10" />
+                <TextBlock Text="Серіали" FontSize="15" Foreground="#A99B92" Margin="0,10" />
+                <TextBlock Text="Книги" FontSize="15" Foreground="#A99B92" Margin="0,10" />
+                <TextBlock Text="Ігри" FontSize="15" Foreground="#A99B92" Margin="0,10" />
             </StackPanel>
         </Border>
 
-        <Grid Grid.Column="1" Margin="30">
+        <Grid Grid.Column="1" Margin="40,17,40,20" Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
