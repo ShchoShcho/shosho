@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -11,7 +11,7 @@ namespace ShoSho.UI.Services
     {
         private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
 
-        public static async Task<string> GetLocalPosterAsync(string webUrl)
+        public static async Task<string?> GetLocalPosterAsync(string webUrl)
         {
             if (string.IsNullOrWhiteSpace(webUrl)) return null;
 

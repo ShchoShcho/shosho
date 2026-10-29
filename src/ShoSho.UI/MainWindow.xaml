@@ -131,10 +131,6 @@
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="5*"/>
-            <RowDefinition Height="243*"/>
-        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260" />
             <ColumnDefinition Width="*" />
@@ -221,149 +217,62 @@
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
                     <StackPanel Margin="0,0,12,0">
                         <TextBlock Text="СТАТУС" FontSize="10" FontWeight="Bold" Foreground="#A68A77" Margin="0,0,0,6" />
-                        <ComboBox ItemsSource="{Binding AvailableStatuses}"
+                        <ComboBox ItemsSource="{Binding StatusFilters}"
                                   SelectedItem="{Binding SelectedStatusFilter, Mode=TwoWay}"
                                   Style="{StaticResource HeaderComboBoxStyle}" Width="140" Cursor="Hand" />
                     </StackPanel>
 
                     <StackPanel>
                         <TextBlock Text="РЕЙТИНГ" FontSize="10" FontWeight="Bold" Foreground="#A68A77" Margin="0,0,0,6" />
-                        <ComboBox Style="{StaticResource HeaderComboBoxStyle}" Width="140" Cursor="Hand">
-                            <ComboBoxItem Content="Від найвищого" IsSelected="True"/>
-                            <ComboBoxItem Content="Від найнижчого"/>
-                        </ComboBox>
+                        <ComboBox ItemsSource="{Binding RatingSortOptions}" SelectedItem="{Binding SelectedRatingSort}" Style="{StaticResource HeaderComboBoxStyle}" Width="140" Cursor="Hand"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>
 
-            <Grid Grid.Row="1" Margin="8,0,8,12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="150" />
-                    <ColumnDefinition Width="100" />
-                    <ColumnDefinition Width="80" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="НАЗВА ТА НОТАТКА" FontSize="11" FontWeight="Bold" Foreground="#A68A77" />
-                <TextBlock Grid.Column="1" Text="СТАТУС" FontSize="11" FontWeight="Bold" Foreground="#A68A77" />
-                <TextBlock Grid.Column="2" Text="РЕЙТИНГ" FontSize="11" FontWeight="Bold" Foreground="#A68A77" />
-                <TextBlock Grid.Column="3" Text="НОТАТКИ" FontSize="11" FontWeight="Bold" Foreground="#A68A77" HorizontalAlignment="Right" />
-            </Grid>
-            <Border Grid.Row="1" BorderBrush="#EADECF" BorderThickness="0,0,0,1" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
+            <TextBox Grid.Row="1" Text="{Binding SearchTagFilter, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="Пошук за тегом" Margin="0,0,0,16"/>
 
-            <ListBox Grid.Row="2" ItemsSource="{Binding Items}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox Grid.Row="3" ItemsSource="{Binding Items}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0" />
-                        <Setter Property="Margin" Value="0" />
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <Border BorderBrush="#EADECF" BorderThickness="0,0,0,1" Background="Transparent">
-                                        <ContentPresenter Margin="8,20" />
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0,0,16,16"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                     </Style>
                 </ListBox.ItemContainerStyle>
-
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="150" />
-                                <ColumnDefinition Width="100" />
-                                <ColumnDefinition Width="80" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="{Binding Title}" FontSize="16" FontFamily="Georgia" FontWeight="SemiBold" Foreground="#2B231F" VerticalAlignment="Center"/>
-
-                                    <ItemsControl ItemsSource="{Binding Tags}" Margin="8,0,0,0" VerticalAlignment="Center">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel Orientation="Horizontal" />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Name}" Foreground="#A68A77" FontSize="10" FontWeight="Bold" Margin="0,0,6,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="100"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-
-                                <TextBlock Text="{Binding CreatedAt, StringFormat='Додано: \{0:yyyy\}'}" FontSize="12" Foreground="#8C7A70" Margin="0,0,0,4" />
-                                <TextBlock Text="{Binding Description}" FontSize="13" Foreground="#7C6D65" TextWrapping="Wrap" FontStyle="Italic"/>
-
-                                <StackPanel Margin="0,12,0,0">
-                                    <StackPanel.Style>
-                                        <Style TargetType="StackPanel">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <MultiDataTrigger>
-                                                    <MultiDataTrigger.Conditions>
-                                                        <Condition Binding="{Binding Status}" Value="Завершено" />
-                                                        <Condition Binding="{Binding IsReviewSectionOpen}" Value="True" />
-                                                    </MultiDataTrigger.Conditions>
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </MultiDataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </StackPanel.Style>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="130" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-
-                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
-                                            <TextBlock Text="Оцінка (1-5):" FontSize="12" Foreground="#A68A77" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBox Text="{Binding Review.Rating, UpdateSourceTrigger=PropertyChanged}" Width="45" TextAlignment="Center" Padding="6,6" Background="#FDFBFC" BorderBrush="#EADECF"/>
-                                        </StackPanel>
-
-                                        <TextBox Grid.Column="1" Text="{Binding Review.Text, UpdateSourceTrigger=PropertyChanged}" Height="50" TextWrapping="Wrap" Background="#FDFBFC" BorderBrush="#EADECF" ToolTip="Ваш текстовий відгук..." />
-
-                                        <Button Grid.Column="2" Content="Зберегти" Command="{Binding DataContext.SaveReviewCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Background="#C27A63" Foreground="White" BorderThickness="0" Padding="14,0" Margin="8,0,0,0" Cursor="Hand">
-                                            <Button.Resources>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="CornerRadius" Value="6" />
-                                                </Style>
-                                            </Button.Resources>
-                                        </Button>
-                                    </Grid>
+                        <Button Width="260" Command="{Binding DataContext.OpenItemDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}" Cursor="Hand" ToolTip="Відкрити деталі" AutomationProperties.Name="{Binding Title}">
+                            <Button.Template><ControlTemplate TargetType="Button">
+                                <Border x:Name="CardBorder" Background="#FAF6F0" CornerRadius="8" BorderBrush="#D4C9BC" BorderThickness="1" ClipToBounds="True">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="CardBorder" Property="BorderBrush" Value="#C27A63"/></Trigger>
+                                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="CardBorder" Property="BorderBrush" Value="#C27A63"/></Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate></Button.Template>
+                            <StackPanel>
+                                <Image Height="220" Stretch="UniformToFill"
+                                       Source="{Binding PosterUrl, IsAsync=True, TargetNullValue='pack://application:,,,/ShoSho.UI;component/Assets/placeholder.jpg', FallbackValue='pack://application:,,,/ShoSho.UI;component/Assets/placeholder.jpg'}"/>
+                                <StackPanel Margin="12">
+                                    <TextBlock Text="{Binding Title}" FontFamily="Georgia" FontSize="18" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Type}" Foreground="#8C7A70" Margin="0,4,0,10"/>
+                                    <Border Background="#EFE8DD" CornerRadius="12" Padding="10,5" HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding Status}" Foreground="#7C6D65" FontSize="12"/>
+                                    </Border>
                                 </StackPanel>
                             </StackPanel>
-
-                            <ComboBox Grid.Column="1" 
-                                      ItemsSource="{Binding DataContext.AvailableStatuses, RelativeSource={RelativeSource AncestorType=Window}}"
-                                      SelectedItem="{Binding Status, Mode=TwoWay}"
-                                      SelectionChanged="StatusComboBox_SelectionChanged"
-                                      Style="{StaticResource PillComboBoxStyle}"
-                                      Width="120" HorizontalAlignment="Left" Cursor="Hand" VerticalAlignment="Top" />
-
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,4,0,0" Cursor="Hand">
-                                <StackPanel.InputBindings>
-                                    <MouseBinding MouseAction="LeftClick" 
-                                                  Command="{Binding DataContext.ToggleReviewSectionCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                  CommandParameter="{Binding}" />
-                                </StackPanel.InputBindings>
-                                <TextBlock Text="⭐" FontSize="30" Foreground="#D19C4C" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding Review.Rating, FallbackValue='-', TargetNullValue='-'}" FontSize="16" FontWeight="SemiBold" Foreground="#2B231F" VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <TextBlock Grid.Column="3" Text="..." FontSize="20" FontWeight="Bold" Foreground="#A68A77" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-4,0,0" Cursor="Hand" />
-                        </Grid>
+                        </Button>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <Grid Grid.Row="3" Margin="0,24,0,0">
+            <Grid Grid.Row="4" Margin="0,24,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -375,8 +284,6 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBox Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}" Width="180" Margin="0,0,12,0" ToolTip="Назва" Background="#FDFBFC"/>
-                    <TextBox Text="{Binding NewItemTags, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="0,0,16,0" ToolTip="Теги (через кому)" Background="#FDFBFC"/>
 
                     <Button Command="{Binding AddItemCommand}" Content="+ Додати бажанку" Style="{StaticResource PrimaryButtonStyle}" />
                 </StackPanel>

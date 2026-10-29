@@ -77,7 +77,7 @@ public class ShoShoDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Text).HasMaxLength(2000);
-            entity.Property(e => e.Rating).IsRequired();
+            entity.Property(e => e.Rating).IsRequired(false);
         });
 
         modelBuilder.Entity<MediaItem>()
