@@ -11,6 +11,8 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using ShoSho.Core.Models;
 using ShoSho.Infrastructure.Data;
+using System.ComponentModel;
+using System.Windows.Data;
 
 namespace ShoSho.UI.ViewModels;
 
@@ -45,7 +47,6 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
-        // Тестовий запис для перевірки плейсхолдера та сітки без запуску програми
         Items.Add(new MediaItem
         {
             Id = Guid.NewGuid(),
@@ -107,7 +108,6 @@ public partial class MainViewModel : ObservableObject
                         item.PosterUrl = localPath;
                     }
                 }
-
                 Items.Add(item);
             }
 
@@ -216,6 +216,28 @@ public partial class MainViewModel : ObservableObject
             {
                 IsLoading = false;
             }
+        }
+    }
+
+    [RelayCommand]
+    public void FilterItems(string statusFilter)
+    {
+        ICollectionView view = CollectionViewSource.GetDefaultView(Items);
+
+        if (string.IsNullOrWhiteSpace(statusFilter) || statusFilter == "Всі")
+        {
+            view.Filter = null;
+        }
+        else
+        {
+            view.Filter = obj =>
+            {
+                if (obj is MediaItem item)
+                {
+                    return item.Status == statusFilter;
+                }
+                return false;
+            };
         }
     }
 
