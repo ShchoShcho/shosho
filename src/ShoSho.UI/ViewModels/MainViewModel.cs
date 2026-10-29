@@ -8,7 +8,9 @@ using System.Windows.Data;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
 using Microsoft.EntityFrameworkCore;
+
 using ShoSho.Core.Models;
 using ShoSho.Infrastructure.Data;
 using System.ComponentModel;
@@ -19,6 +21,9 @@ namespace ShoSho.UI.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly IDbContextFactory<ShoShoDbContext> _dbContextFactory;
+
+
+    // Властивості для створення картки
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddItemCommand))]
@@ -131,6 +136,63 @@ public partial class MainViewModel : ObservableObject
         };
     }
 
+
+    // Відстеження змін фільтрів
+
+    partial void OnSearchTagFilterChanged(string value)
+    {
+        ApplyFilter();
+    }
+
+    partial void OnSelectedStatusFilterChanged(string value)
+    {
+        ApplyFilter();
+    }
+
+
+    // Фільтрація карток
+
+    private void ApplyFilter()
+    {
+        var view = CollectionViewSource.GetDefaultView(Items);
+
+        if (string.IsNullOrWhiteSpace(SearchTagFilter) &&
+            (string.IsNullOrEmpty(SelectedStatusFilter) ||
+             SelectedStatusFilter == "Усі" ||
+             SelectedStatusFilter == "Усі статуси"))
+        {
+            view.Filter = null;
+            return;
+        }
+
+        view.Filter = obj =>
+        {
+            if (obj is not MediaItem item)
+                return false;
+
+            bool matchesStatus =
+                string.IsNullOrEmpty(SelectedStatusFilter) ||
+                SelectedStatusFilter == "Усі" ||
+                SelectedStatusFilter == "Усі статуси" ||
+                item.Status == SelectedStatusFilter;
+
+            bool matchesTag = true;
+
+            if (!string.IsNullOrWhiteSpace(SearchTagFilter))
+            {
+                var searchTarget = SearchTagFilter.Trim().ToLower();
+
+                matchesTag = item.Tags.Any(
+                    t => t.Name.ToLower().Contains(searchTarget));
+            }
+
+            return matchesStatus && matchesTag;
+        };
+    }
+
+
+    // Завантаження даних
+
     [RelayCommand]
     public async Task InitializeAsync()
     {
@@ -144,10 +206,12 @@ public partial class MainViewModel : ObservableObject
 
             var items = await db.MediaItems
                 .Include(m => m.Tags)
+                .Include(m => m.Review)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
             Items.Clear();
+
             foreach (var item in items)
             {
                 // Кешуємо зображення: якщо це веб-посилання, завантажуємо локально і підміняємо шлях для UI
@@ -166,7 +230,8 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Помилка підключення до БД: {ex.Message}";
+            StatusMessage =
+                $"Помилка підключення до БД: {ex.Message}";
         }
         finally
         {
@@ -221,9 +286,11 @@ public partial class MainViewModel : ObservableObject
             };
 
             db.MediaItems.Add(newItem);
+
             await db.SaveChangesAsync();
 
             Items.Insert(0, newItem);
+
             NewItemTitle = string.Empty;
             NewItemTags = string.Empty;
             StatusMessage = $"Картку «{title}» успішно збережено!";
@@ -319,7 +386,116 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private sealed class DesignTimeDbContextFactory : IDbContextFactory<ShoShoDbContext>
+
+    // Оновлення статусу картки
+
+    [RelayCommand]
+    public async Task UpdateItemStatusAsync(MediaItem item)
+    {
+        if (item == null)
+            return;
+
+        try
+        {
+            await using var db =
+                await _dbContextFactory.CreateDbContextAsync();
+
+            var existingItem =
+                await db.MediaItems.FindAsync(item.Id);
+
+            if (existingItem != null)
+            {
+                // Захист від нескінченного циклу оновлення WPF
+                if (existingItem.Status == item.Status)
+                {
+                    if (item.Status == MediaStatusExtensions.Completed &&
+                        item.Review == null)
+                    {
+                        item.Review = new Review
+                        {
+                            MediaItemId = item.Id
+                        };
+                    }
+
+                    return;
+                }
+
+                existingItem.Status = item.Status;
+
+                await db.SaveChangesAsync();
+
+                if (item.Status == MediaStatusExtensions.Completed &&
+                    item.Review == null)
+                {
+                    item.Review = new Review
+                    {
+                        MediaItemId = item.Id
+                    };
+                }
+
+                StatusMessage =
+                    $"Статус успішно змінено на «{item.Status}»";
+
+                ApplyFilter();
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Помилка оновлення: {ex.InnerException?.Message ?? ex.Message}";
+        }
+    }
+
+
+    // Збереження відгуку
+
+    [RelayCommand]
+    public async Task SaveReviewAsync(MediaItem item)
+    {
+        if (item == null || item.Review == null)
+            return;
+
+        if (item.Review.Rating < 1)
+            item.Review.Rating = 1;
+
+        if (item.Review.Rating > 5)
+            item.Review.Rating = 5;
+
+        try
+        {
+            await using var db =
+                await _dbContextFactory.CreateDbContextAsync();
+
+            var existingReview = await db.Reviews
+                .FirstOrDefaultAsync(r => r.MediaItemId == item.Id);
+
+            if (existingReview != null)
+            {
+                existingReview.Rating = item.Review.Rating;
+                existingReview.Text = item.Review.Text;
+            }
+            else
+            {
+                db.Reviews.Add(item.Review);
+            }
+
+            await db.SaveChangesAsync();
+
+            StatusMessage =
+                $"Відгук для «{item.Title}» збережено!";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Помилка збереження відгуку: {ex.InnerException?.Message ?? ex.Message}";
+        }
+    }
+
+
+    // Фабрика контексту для дизайнера
+
+    private sealed class DesignTimeDbContextFactory
+        : IDbContextFactory<ShoShoDbContext>
     {
         public ShoShoDbContext CreateDbContext()
         {

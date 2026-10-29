@@ -102,6 +102,31 @@ namespace ShoSho.Infrastructure.Migrations
                     b.ToTable("MediaItems");
                 });
 
+            modelBuilder.Entity("ShoSho.Core.Models.Review", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("MediaItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MediaItemId")
+                        .IsUnique();
+
+                    b.ToTable("Reviews");
+                });
+
             modelBuilder.Entity("ShoSho.Core.Models.Tag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -134,6 +159,22 @@ namespace ShoSho.Infrastructure.Migrations
                         .HasForeignKey("TagsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ShoSho.Core.Models.Review", b =>
+                {
+                    b.HasOne("ShoSho.Core.Models.MediaItem", "MediaItem")
+                        .WithOne("Review")
+                        .HasForeignKey("ShoSho.Core.Models.Review", "MediaItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MediaItem");
+                });
+
+            modelBuilder.Entity("ShoSho.Core.Models.MediaItem", b =>
+                {
+                    b.Navigation("Review");
                 });
 #pragma warning restore 612, 618
         }
