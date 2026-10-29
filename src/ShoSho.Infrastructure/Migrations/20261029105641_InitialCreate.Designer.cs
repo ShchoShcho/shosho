@@ -11,8 +11,8 @@ using ShoSho.Infrastructure.Data;
 namespace ShoSho.Infrastructure.Migrations
 {
     [DbContext(typeof(ShoShoDbContext))]
-    [Migration("20261028223030_UpdateTagsStructure")]
-    partial class UpdateTagsStructure
+    [Migration("20261029105641_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,7 +32,7 @@ namespace ShoSho.Infrastructure.Migrations
 
                     b.HasIndex("TagsId");
 
-                    b.ToTable("MediaItemTag");
+                    b.ToTable("ItemTag", (string)null);
                 });
 
             modelBuilder.Entity("ShoSho.Core.Models.MediaItem", b =>
@@ -76,11 +76,15 @@ namespace ShoSho.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tag");
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("MediaItemTag", b =>

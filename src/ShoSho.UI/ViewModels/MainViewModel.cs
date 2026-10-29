@@ -32,7 +32,18 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _searchTagFilter = string.Empty;
 
+    [ObservableProperty]
+    private string _selectedStatusFilter = string.Empty;
+
     public ObservableCollection<MediaItem> Items { get; } = new();
+
+    public List<string> AvailableStatuses { get; } = new()
+    {
+        MediaStatusExtensions.Planned,
+        MediaStatusExtensions.InProgress,
+        MediaStatusExtensions.Completed,
+        MediaStatusExtensions.Postponed
+    };
 
     public MainViewModel(IDbContextFactory<ShoShoDbContext> dbContextFactory)
     {
@@ -46,24 +57,43 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnSearchTagFilterChanged(string value)
     {
+        ApplyFilter();
+    }
+
+    partial void OnSelectedStatusFilterChanged(string value)
+    {
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
         var view = CollectionViewSource.GetDefaultView(Items);
 
-        if (string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrWhiteSpace(SearchTagFilter) &&
+            (string.IsNullOrEmpty(SelectedStatusFilter) || SelectedStatusFilter == "Усі" || SelectedStatusFilter == "Усі статуси"))
         {
             view.Filter = null;
+            return;
         }
-        else
+
+        view.Filter = obj =>
         {
-            var searchTarget = value.Trim().ToLower();
-            view.Filter = obj =>
+            if (obj is not MediaItem item) return false;
+
+            bool matchesStatus = string.IsNullOrEmpty(SelectedStatusFilter) ||
+                                 SelectedStatusFilter == "Усі" ||
+                                 SelectedStatusFilter == "Усі статуси" ||
+                                 item.Status == SelectedStatusFilter;
+
+            bool matchesTag = true;
+            if (!string.IsNullOrWhiteSpace(SearchTagFilter))
             {
-                if (obj is MediaItem item)
-                {
-                    return item.Tags.Any(t => t.Name.ToLower().Contains(searchTarget));
-                }
-                return false;
-            };
-        }
+                var searchTarget = SearchTagFilter.Trim().ToLower();
+                matchesTag = item.Tags.Any(t => t.Name.ToLower().Contains(searchTarget));
+            }
+
+            return matchesStatus && matchesTag;
+        };
     }
 
     [RelayCommand]
@@ -75,7 +105,6 @@ public partial class MainViewModel : ObservableObject
             StatusMessage = "Підключення до бази даних...";
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-
             await db.Database.MigrateAsync();
 
             var items = await db.MediaItems
@@ -107,8 +136,7 @@ public partial class MainViewModel : ObservableObject
     public async Task AddItemAsync()
     {
         var title = NewItemTitle.Trim();
-        if (string.IsNullOrWhiteSpace(title))
-            return;
+        if (string.IsNullOrWhiteSpace(title)) return;
 
         try
         {
@@ -157,6 +185,8 @@ public partial class MainViewModel : ObservableObject
             NewItemTitle = string.Empty;
             NewItemTags = string.Empty;
             StatusMessage = $"Картку «{title}» успішно збережено!";
+
+            ApplyFilter();
         }
         catch (Exception ex)
         {
@@ -165,6 +195,31 @@ public partial class MainViewModel : ObservableObject
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task UpdateItemStatusAsync(MediaItem item)
+    {
+        if (item == null) return;
+
+        try
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var existingItem = await db.MediaItems.FindAsync(item.Id);
+            if (existingItem != null)
+            {
+                existingItem.Status = item.Status;
+                await db.SaveChangesAsync();
+
+                StatusMessage = $"Статус успішно змінено на «{item.Status}»";
+                ApplyFilter();
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Помилка оновлення: {ex.InnerException?.Message ?? ex.Message}";
         }
     }
 

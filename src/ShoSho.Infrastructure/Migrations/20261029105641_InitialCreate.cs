@@ -6,17 +6,33 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ShoSho.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTagsAndItemTags : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "MediaItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    PosterUrl = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MediaItems", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -27,8 +43,8 @@ namespace ShoSho.Infrastructure.Migrations
                 name: "ItemTag",
                 columns: table => new
                 {
-                    MediaItemsId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TagsId = table.Column<Guid>(type: "uuid", nullable: false)
+                    MediaItemsId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    TagsId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -64,6 +80,9 @@ namespace ShoSho.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ItemTag");
+
+            migrationBuilder.DropTable(
+                name: "MediaItems");
 
             migrationBuilder.DropTable(
                 name: "Tags");

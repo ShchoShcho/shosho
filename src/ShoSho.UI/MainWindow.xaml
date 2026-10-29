@@ -47,22 +47,9 @@
 
         <Border Grid.Column="0" Background="#2B231F" Padding="24,32,24,24" Grid.RowSpan="2">
             <StackPanel>
-                <TextBlock Text="Шо-Шо"
-                           FontSize="32"
-                           FontFamily="Georgia"
-                           Foreground="#F5EFE6"
-                           Margin="0,0,0,2" />
-                <TextBlock Text="ОСОБИСТИЙ МЕДІААРХІВ"
-                           FontSize="10"
-                           FontWeight="SemiBold"
-                           Foreground="#8C7A70"
-                           Margin="0,0,0,40" />
-
-                <TextBlock Text="КОЛЕКЦІЯ"
-                           FontSize="11"
-                           Foreground="#8C7A70"
-                           FontWeight="Bold"
-                           Margin="0,0,0,16" />
+                <TextBlock Text="Шо-Шо" FontSize="32" FontFamily="Georgia" Foreground="#F5EFE6" Margin="0,0,0,2" />
+                <TextBlock Text="ОСОБИСТИЙ МЕДІААРХІВ" FontSize="10" FontWeight="SemiBold" Foreground="#8C7A70" Margin="0,0,0,40" />
+                <TextBlock Text="КОЛЕКЦІЯ" FontSize="11" Foreground="#8C7A70" FontWeight="Bold" Margin="0,0,0,16" />
 
                 <Border Background="#3A302A" CornerRadius="6" Padding="12,10" Margin="-12,0,-12,8">
                     <Grid>
@@ -85,21 +72,41 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="0,0,0,32">
-                <TextBlock Text="МОЯ КОЛЕКЦІЯ - 2026"
-                           FontSize="11"
-                           Foreground="#A68A77"
-                           FontWeight="Bold"
-                           Margin="0,0,0,8" />
-                <TextBlock Text="Каталог вражень"
-                           FontSize="38"
-                           FontFamily="Georgia"
-                           Foreground="#2B231F" />
-                <TextBlock Text="Фільми, книжки й світи, до яких хочеться повернутися."
-                           FontSize="15"
-                           Foreground="#7C6D65"
-                           Margin="0,8,0,0" />
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,32">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="МОЯ КОЛЕКЦІЯ - 2026" FontSize="11" Foreground="#A68A77" FontWeight="Bold" Margin="0,0,0,8" />
+                    <TextBlock Text="Каталог вражень" FontSize="38" FontFamily="Georgia" Foreground="#2B231F" />
+                    <TextBlock Text="Фільми, книжки й світи, до яких хочеться повернутися." FontSize="15" Foreground="#7C6D65" Margin="0,8,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                    <StackPanel Margin="0,0,0,0">
+                        <TextBlock Text="СТАТУС" FontSize="11" FontWeight="Bold" Foreground="#A68A77" Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding AvailableStatuses}"
+                                  SelectedItem="{Binding SelectedStatusFilter, Mode=TwoWay}"
+                                  Background="#FDFBFC" BorderBrush="#EADECF" BorderThickness="1"
+                                  Foreground="#322824" FontSize="14" Padding="12,8" Width="140" Cursor="Hand">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox">
+                                    <Setter Property="IsEditable" Value="True"/>
+                                    <Setter Property="Text" Value="Усі статуси"/>
+                                    <Setter Property="IsReadOnly" Value="True"/>
+                                </Style>
+                            </ComboBox.Style>
+                            <ComboBox.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="8" />
+                                </Style>
+                            </ComboBox.Resources>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
 
             <Grid Grid.Row="1" Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
@@ -119,21 +126,10 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBox Grid.Row="0" Grid.Column="0"
-                                 Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,12,12"
-                                 ToolTip="Введіть назву фільму, серіалу або гри" />
+                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,12" ToolTip="Введіть назву фільму, серіалу або гри" />
+                        <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding NewItemTags, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0" ToolTip="Введіть теги через кому (наприклад: драйв, затишне, навчання)" />
 
-                        <TextBox Grid.Row="1" Grid.Column="0"
-                                 Text="{Binding NewItemTags, UpdateSourceTrigger=PropertyChanged}"
-                                 Margin="0,0,12,0"
-                                 ToolTip="Введіть теги через кому (наприклад: драйв, затишне, навчання)" />
-
-                        <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
-                                Command="{Binding AddItemCommand}"
-                                Content="+ Додати" FontSize="15" FontWeight="SemiBold"
-                                Foreground="White" Background="#C27A63" BorderThickness="0"
-                                Padding="28,0" Cursor="Hand" IsDefault="True">
+                        <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Command="{Binding AddItemCommand}" Content="+ Додати" FontSize="15" FontWeight="SemiBold" Foreground="White" Background="#C27A63" BorderThickness="0" Padding="28,0" Cursor="Hand" IsDefault="True">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="8" />
@@ -146,16 +142,13 @@
                 <Border Grid.Column="2" Background="#FDFBFC" CornerRadius="12" Padding="20" BorderBrush="#EADECF" BorderThickness="1">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="ФІЛЬТР ЗА ТЕГОМ" FontSize="11" FontWeight="Bold" Foreground="#A68A77" Margin="0,0,0,10" />
-                        <TextBox Text="{Binding SearchTagFilter, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Шукати за тегом (наприклад: драйв)" />
+                        <TextBox Text="{Binding SearchTagFilter, UpdateSourceTrigger=PropertyChanged}" ToolTip="Шукати за тегом (наприклад: драйв)" />
                     </StackPanel>
                 </Border>
             </Grid>
 
             <Grid Grid.Row="2">
-                <TextBlock Text="Поки що немає збережених записів. Додайте свій перший фільм чи гру вище!"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Foreground="#A68A77" FontSize="15" FontStyle="Italic">
+                <TextBlock Text="Поки що немає збережених записів. Додайте свій перший фільм чи гру вище!" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A68A77" FontSize="15" FontStyle="Italic">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Collapsed" />
@@ -168,10 +161,7 @@
                     </TextBlock.Style>
                 </TextBlock>
 
-                <ListBox ItemsSource="{Binding Items}"
-                         BorderThickness="0"
-                         Background="Transparent"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox ItemsSource="{Binding Items}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="0" />
@@ -186,14 +176,9 @@
                             </Setter>
                         </Style>
                     </ListBox.ItemContainerStyle>
-
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#FDFBFC"
-                                    BorderBrush="#EADECF"
-                                    BorderThickness="1"
-                                    CornerRadius="12"
-                                    Padding="24,20">
+                            <Border Background="#FDFBFC" BorderBrush="#EADECF" BorderThickness="1" CornerRadius="12" Padding="24,20">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -201,15 +186,8 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}"
-                                                   FontSize="18"
-                                                   FontFamily="Georgia"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#2B231F" />
-                                        <TextBlock Text="{Binding CreatedAt, StringFormat='Додано: \{0:dd.MM.yyyy\}'}"
-                                                   FontSize="12"
-                                                   Foreground="#A68A77"
-                                                   Margin="0,4,0,12" />
+                                        <TextBlock Text="{Binding Title}" FontSize="18" FontFamily="Georgia" FontWeight="SemiBold" Foreground="#2B231F" />
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat='Додано: \{0:dd.MM.yyyy\}'}" FontSize="12" Foreground="#A68A77" Margin="0,4,0,12" />
 
                                         <ItemsControl ItemsSource="{Binding Tags}">
                                             <ItemsControl.ItemsPanel>
@@ -227,17 +205,26 @@
                                         </ItemsControl>
                                     </StackPanel>
 
-                                    <Border Grid.Column="1"
-                                            Background="#E6DFD3"
-                                            CornerRadius="16"
-                                            Padding="16,6"
-                                            VerticalAlignment="Top"
-                                            Margin="0,4,0,0">
-                                        <TextBlock Text="{Binding Status}"
-                                                    FontSize="12"
-                                                    FontWeight="Bold"
-                                                    Foreground="#5D4F46" />
-                                    </Border>
+                                    <ComboBox Grid.Column="1"
+                                              ItemsSource="{Binding DataContext.AvailableStatuses, RelativeSource={RelativeSource AncestorType=Window}}"
+                                              SelectedItem="{Binding Status, Mode=TwoWay}"
+                                              SelectionChanged="StatusComboBox_SelectionChanged"
+                                              Background="#E6DFD3"
+                                              BorderThickness="0"
+                                              Foreground="#5D4F46"
+                                              FontWeight="Bold"
+                                              FontSize="12"
+                                              VerticalAlignment="Top"
+                                              Margin="0,4,0,0"
+                                              Padding="12,6"
+                                              Width="115"
+                                              Cursor="Hand">
+                                        <ComboBox.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="12" />
+                                            </Style>
+                                        </ComboBox.Resources>
+                                    </ComboBox>
                                 </Grid>
                             </Border>
                         </DataTemplate>
