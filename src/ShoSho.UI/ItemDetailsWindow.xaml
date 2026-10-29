@@ -65,7 +65,7 @@
                         <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MaxLength="2000" MinHeight="80" TextWrapping="Wrap" AcceptsReturn="True"/>
                         <TextBlock Text="Теги настрою (через кому або #)"/>
                         <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Text="Оцінка (необов’язково)"/>
+                        <TextBlock Text="Оцінка (необов'язково)"/>
                         <ComboBox ItemsSource="{Binding Ratings}" SelectedItem="{Binding Rating}"/>
                         <TextBlock Text="Відгук"/>
                         <TextBox Text="{Binding ReviewText, UpdateSourceTrigger=PropertyChanged}" MaxLength="2000" MinHeight="100" TextWrapping="Wrap" AcceptsReturn="True"/>
@@ -73,8 +73,13 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
-        <StackPanel Grid.Row="1" Margin="0,20,0,0">
-            <TextBlock Text="{Binding ErrorMessage}" Foreground="#A33D32" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+        <Grid Grid.Row="1" Margin="0,20,0,0">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#A33D32" TextWrapping="Wrap" VerticalAlignment="Center"/>
+
+            <Button Content="Видалити" Command="{Binding DeleteCommand}" Padding="22,10"
+                    Background="#A33D32" Foreground="White" HorizontalAlignment="Left"/>
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <StackPanel.Style><Style TargetType="StackPanel">
                     <Style.Triggers><DataTrigger Binding="{Binding IsSaving}" Value="True"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers>
@@ -88,6 +93,6 @@
                 <Button Content="Зберегти" Command="{Binding SaveCommand}" Padding="22,10" Background="#C27A63" Foreground="White"
                         Visibility="{Binding IsEditing, Converter={StaticResource BoolVisibility}}"/>
             </StackPanel>
-        </StackPanel>
+        </Grid>
     </Grid>
 </Window>

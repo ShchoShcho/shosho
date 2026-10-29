@@ -1,33 +1,62 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShoSho.Core.Models;
+using System.Windows;
 
 namespace ShoSho.UI.ViewModels;
 
-// A detached draft: closing the window never changes the collection or database.
 public partial class ItemDetailsViewModel : ObservableObject
 {
     private readonly Func<ItemDetailsViewModel, Task> _save;
+    private readonly Func<ItemDetailsViewModel, Task>? _delete;
+    
     public Guid Id { get; }
     public string? CoverSource { get; }
     public string[] MediaTypes { get; }
     public string[] Statuses { get; }
     public int?[] Ratings { get; } = { null, 1, 2, 3, 4, 5 };
+
+    [ObservableProperty]
+    private string _title = string.Empty;
+
+    [ObservableProperty]
+    private string _mediaType = string.Empty;
+
+    [ObservableProperty]
+    private string _status = string.Empty;
+
+    [ObservableProperty]
+    private string _posterUrl = string.Empty;
+
+    [ObservableProperty]
+    private string _description = string.Empty;
+
+    [ObservableProperty]
+    private string _tags = string.Empty;
+
+    [ObservableProperty]
+    private int? _rating;
+
+    [ObservableProperty]
+    private string _reviewText = string.Empty;
+
+    [ObservableProperty]
+    private bool _isEditing;
+
+    [ObservableProperty]
+    private bool _isSaving;
+
+    [ObservableProperty]
+    private string _errorMessage = string.Empty;
+
     public event Action? Saved;
+    public event Action? Deleted;
 
-    [ObservableProperty] private string _title;
-    [ObservableProperty] private string _mediaType;
-    [ObservableProperty] private string _status;
-    [ObservableProperty] private string _posterUrl;
-    [ObservableProperty] private string _description;
-    [ObservableProperty] private string _tags;
-    [ObservableProperty] private int? _rating;
-    [ObservableProperty] private string _reviewText;
-    [ObservableProperty] private bool _isEditing;
-    [ObservableProperty] private bool _isSaving;
-    [ObservableProperty] private string _errorMessage = string.Empty;
-
-    public ItemDetailsViewModel(MediaItem item, string? coverSource, Func<ItemDetailsViewModel, Task> save)
+    public ItemDetailsViewModel(
+        MediaItem item, 
+        string? coverSource, 
+        Func<ItemDetailsViewModel, Task> save, 
+        Func<ItemDetailsViewModel, Task>? delete = null)
     {
         Id = item.Id;
         CoverSource = coverSource;
@@ -42,11 +71,44 @@ public partial class ItemDetailsViewModel : ObservableObject
         MediaTypes = new[] { "Книга", "Фільм", "Серіал", "Гра", "Інше", item.Type }.Distinct().ToArray();
         Statuses = Enum.GetValues<MediaStatus>().Select(s => s.ToDisplayName()).Append(item.Status).Distinct().ToArray();
         _save = save;
+        _delete = delete;
     }
 
     [RelayCommand]
     private void Edit() => IsEditing = true;
 
+    [RelayCommand]
+    public async Task DeleteAsync()
+    {
+        if (_delete == null) return;
+
+        var result = MessageBox.Show(
+            $"Ви дійсно бажаєте видалити запис «{Title}»?",
+            "Підтвердження видалення",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            IsSaving = true;
+            ErrorMessage = string.Empty;
+            
+            await _delete(this);
+            
+            Deleted?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Не вдалося видалити: {ex.InnerException?.Message ?? ex.Message}";
+        }
+        finally 
+        { 
+            IsSaving = false; 
+        }
+    }
     [RelayCommand]
     public async Task SaveAsync()
     {

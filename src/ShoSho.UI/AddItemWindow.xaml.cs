@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ShoSho.Core.Models;
 
 namespace ShoSho.UI;
@@ -24,6 +25,8 @@ public partial class AddItemWindow : Window
         TypeInput.SelectedIndex = 0;
         StatusInput.ItemsSource = Enum.GetValues<MediaStatus>().Select(s => s.ToDisplayName());
         StatusInput.SelectedIndex = 0;
+
+        ValidateTitle();
     }
 
     private void StatusChanged(object sender, SelectionChangedEventArgs e)
@@ -32,11 +35,36 @@ public partial class AddItemWindow : Window
             ReviewPanel.Visibility = Status == MediaStatusExtensions.Completed ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void TitleInput_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        ValidateTitle();
+    }
+
+    private bool ValidateTitle()
+    {
+        bool isEmpty = string.IsNullOrWhiteSpace(ItemTitle);
+
+        if (isEmpty)
+        {
+            if (TitleErrorText != null) TitleErrorText.Visibility = Visibility.Visible;
+            TitleInput.BorderBrush = Brushes.IndianRed;
+            if (SaveButton != null) SaveButton.IsEnabled = false;
+            return false;
+        }
+        else
+        {
+            if (TitleErrorText != null) TitleErrorText.Visibility = Visibility.Collapsed;
+            TitleInput.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#E0D6C8");
+            if (SaveButton != null) SaveButton.IsEnabled = true;
+            return true;
+        }
+    }
+
     private void SaveClicked(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(ItemTitle))
+        if (!ValidateTitle())
         {
-            ErrorText.Text = "Введіть назву.";
+            ErrorText.Text = "Поле «Назва» є обов'язковим.";
             return;
         }
         if (Status == MediaStatusExtensions.Completed && !string.IsNullOrWhiteSpace(RatingInput.Text) &&

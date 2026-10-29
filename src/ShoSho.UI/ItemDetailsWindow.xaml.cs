@@ -8,23 +8,33 @@ namespace ShoSho.UI;
 public partial class ItemDetailsWindow : Window
 {
     private readonly ItemDetailsViewModel _viewModel;
-    private bool _saved;
+    private bool _savedOrDeleted;
 
     public ItemDetailsWindow(ItemDetailsViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = viewModel;
+
         viewModel.Saved += OnSaved;
-        Closed += (_, _) => viewModel.Saved -= OnSaved;
+        viewModel.Deleted += OnDeleted;
+        Closed += (_, _) => 
+        { 
+            viewModel.Saved -= OnSaved; 
+            viewModel.Deleted -= OnDeleted;
+        };
+
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) { Close(); e.Handled = true; } };
     }
 
-    private void OnSaved() { _saved = true; Close(); }
+    private void OnSaved() { _savedOrDeleted = true; Close(); }
+    private void OnDeleted() { _savedOrDeleted = true; Close(); }
+
     private void CloseClicked(object sender, RoutedEventArgs e) => Close();
+
     protected override void OnClosing(CancelEventArgs e)
     {
-        if (_viewModel.IsSaving && !_saved) e.Cancel = true;
+        if (_viewModel.IsSaving && !_savedOrDeleted) e.Cancel = true;
         base.OnClosing(e);
     }
 }

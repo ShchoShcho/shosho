@@ -253,7 +253,32 @@ public partial class MainViewModel : ObservableObject
         await using var db = await _dbContextFactory.CreateDbContextAsync();
         var stored = await db.MediaItems.AsNoTracking().Include(x => x.Tags).Include(x => x.Review)
             .SingleAsync(x => x.Id == item.Id);
-        return new ItemDetailsViewModel(stored, item.PosterUrl, SaveItemDetailsAsync);
+
+        return new ItemDetailsViewModel(
+            stored, 
+            item.PosterUrl, 
+            SaveItemDetailsAsync,
+            delete: async draft => 
+            {
+                await using var deleteDb = await _dbContextFactory.CreateDbContextAsync();
+                var dbItem = await deleteDb.MediaItems.FindAsync(draft.Id);
+                if (dbItem != null)
+                {
+                    deleteDb.MediaItems.Remove(dbItem);
+                    await deleteDb.SaveChangesAsync();
+                }
+
+                var target = Items.FirstOrDefault(x => x.Id == draft.Id);
+                if (target != null)
+                {
+                    Items.Remove(target);
+                }
+
+                ApplyFilter();
+                ApplySorting();
+                StatusMessage = $"Картку «{draft.Title}» успішно видалено.";
+            }
+        );
     }
 
     private async Task SaveItemDetailsAsync(ItemDetailsViewModel draft)
