@@ -1,11 +1,10 @@
 using System.Windows;
+using System.Windows.Controls;
+using ShoSho.Core.Models;
 using ShoSho.UI.ViewModels;
 
 namespace ShoSho.UI;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
@@ -22,5 +21,16 @@ public partial class MainWindow : Window
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         await _viewModel.InitializeCommand.ExecuteAsync(null);
+    }
+
+    private void StatusComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox comboBox && comboBox.DataContext is MediaItem item)
+        {
+            if (_viewModel.UpdateItemStatusCommand.CanExecute(item))
+            {
+                _viewModel.UpdateItemStatusCommand.Execute(item);
+            }
+        }
     }
 }
