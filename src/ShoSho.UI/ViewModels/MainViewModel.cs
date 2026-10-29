@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
@@ -39,9 +40,19 @@ public partial class MainViewModel : ObservableObject
         _dbContextFactory = dbContextFactory;
     }
 
+    // Конструктор за замовчуванням для дизайнера XAML (Design-time)
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
+        // Тестовий запис для перевірки плейсхолдера та сітки без запуску програми
+        Items.Add(new MediaItem
+        {
+            Id = Guid.NewGuid(),
+            Title = "Тестовий фільм",
+            PosterUrl = null,
+            Status = MediaStatusExtensions.Planned,
+            CreatedAt = DateTime.UtcNow
+        });
     }
 
     partial void OnSearchTagFilterChanged(string value)
@@ -101,16 +112,13 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool CanAddItem => !string.IsNullOrWhiteSpace(NewItemTitle) && !IsLoading;
-
-    [RelayCommand(CanExecute = nameof(CanAddItem))]
+    // Команда відкриття модального вікна та збереження нового запису
+    [RelayCommand]
     public async Task AddItemAsync()
     {
-        var title = NewItemTitle.Trim();
-        if (string.IsNullOrWhiteSpace(title))
-            return;
-
-        try
+        var addWindow = new AddItemWindow();
+        
+        if (Application.Current.MainWindow != null && Application.Current.MainWindow != addWindow)
         {
             IsLoading = true;
             StatusMessage = "Збереження в базу даних...";
@@ -158,13 +166,45 @@ public partial class MainViewModel : ObservableObject
             NewItemTags = string.Empty;
             StatusMessage = $"Картку «{title}» успішно збережено!";
         }
-        catch (Exception ex)
+
+        // Якщо користувач натиснув «Зберегти» у модальному вікні
+        if (addWindow.ShowDialog() == true)
         {
-            StatusMessage = $"Не вдалося зберегти картку: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
+            try
+            {
+                IsLoading = true;
+                StatusMessage = "Збереження в базу даних...";
+
+                var newItem = new MediaItem
+                {
+                    Id = Guid.NewGuid(),
+                    Title = addWindow.ItemTitle,
+                    Type = addWindow.MediaType,
+                    Status = addWindow.Status,
+                    PosterUrl = addWindow.PosterUrl,
+                    Description = addWindow.Note,
+                    Tags = addWindow.Tags,
+                    Rating = addWindow.Status == "Завершено" ? addWindow.Rating : (int?)null,
+                    Review = addWindow.Status == "Завершено" ? addWindow.Review : string.Empty,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await using var db = await _dbContextFactory.CreateDbContextAsync();
+                db.MediaItems.Add(newItem);
+                await db.SaveChangesAsync();
+
+                // Додаємо картку на початок списку в UI
+                Items.Insert(0, newItem);
+                StatusMessage = $"Картку «{newItem.Title}» успішно збережено!";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Не вдалося зберегти картку: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 
