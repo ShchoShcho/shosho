@@ -1,12 +1,16 @@
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
 using Microsoft.EntityFrameworkCore;
+
 using ShoSho.Core.Models;
 using ShoSho.Infrastructure.Data;
 
@@ -16,6 +20,9 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly IDbContextFactory<ShoShoDbContext> _dbContextFactory;
 
+
+    // Властивості для створення картки
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddItemCommand))]
     private string _newItemTitle = string.Empty;
@@ -23,11 +30,17 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _newItemTags = string.Empty;
 
+
+    // Стан програми
+
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
     [ObservableProperty]
     private bool _isLoading;
+
+
+    // Фільтри
 
     [ObservableProperty]
     private string _searchTagFilter = string.Empty;
@@ -35,7 +48,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedStatusFilter = string.Empty;
 
+
+    // Колекція карток
+
     public ObservableCollection<MediaItem> Items { get; } = new();
+
+
+    // Доступні статуси
 
     public List<string> AvailableStatuses { get; } = new()
     {
@@ -45,7 +64,11 @@ public partial class MainViewModel : ObservableObject
         MediaStatusExtensions.Postponed
     };
 
-    public MainViewModel(IDbContextFactory<ShoShoDbContext> dbContextFactory)
+
+    // Конструктори
+
+    public MainViewModel(
+        IDbContextFactory<ShoShoDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }
@@ -54,6 +77,9 @@ public partial class MainViewModel : ObservableObject
         : this(new DesignTimeDbContextFactory())
     {
     }
+
+
+    // Відстеження змін фільтрів
 
     partial void OnSearchTagFilterChanged(string value)
     {
@@ -65,12 +91,17 @@ public partial class MainViewModel : ObservableObject
         ApplyFilter();
     }
 
+
+    // Фільтрація карток
+
     private void ApplyFilter()
     {
         var view = CollectionViewSource.GetDefaultView(Items);
 
         if (string.IsNullOrWhiteSpace(SearchTagFilter) &&
-            (string.IsNullOrEmpty(SelectedStatusFilter) || SelectedStatusFilter == "Усі" || SelectedStatusFilter == "Усі статуси"))
+            (string.IsNullOrEmpty(SelectedStatusFilter) ||
+             SelectedStatusFilter == "Усі" ||
+             SelectedStatusFilter == "Усі статуси"))
         {
             view.Filter = null;
             return;
@@ -78,23 +109,31 @@ public partial class MainViewModel : ObservableObject
 
         view.Filter = obj =>
         {
-            if (obj is not MediaItem item) return false;
+            if (obj is not MediaItem item)
+                return false;
 
-            bool matchesStatus = string.IsNullOrEmpty(SelectedStatusFilter) ||
-                                 SelectedStatusFilter == "Усі" ||
-                                 SelectedStatusFilter == "Усі статуси" ||
-                                 item.Status == SelectedStatusFilter;
+            bool matchesStatus =
+                string.IsNullOrEmpty(SelectedStatusFilter) ||
+                SelectedStatusFilter == "Усі" ||
+                SelectedStatusFilter == "Усі статуси" ||
+                item.Status == SelectedStatusFilter;
 
             bool matchesTag = true;
+
             if (!string.IsNullOrWhiteSpace(SearchTagFilter))
             {
                 var searchTarget = SearchTagFilter.Trim().ToLower();
-                matchesTag = item.Tags.Any(t => t.Name.ToLower().Contains(searchTarget));
+
+                matchesTag = item.Tags.Any(
+                    t => t.Name.ToLower().Contains(searchTarget));
             }
 
             return matchesStatus && matchesTag;
         };
     }
+
+
+    // Завантаження даних
 
     [RelayCommand]
     public async Task InitializeAsync()
@@ -104,15 +143,19 @@ public partial class MainViewModel : ObservableObject
             IsLoading = true;
             StatusMessage = "Підключення до бази даних...";
 
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            await using var db =
+                await _dbContextFactory.CreateDbContextAsync();
+
             await db.Database.MigrateAsync();
 
             var items = await db.MediaItems
                 .Include(m => m.Tags)
+                .Include(m => m.Review)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
             Items.Clear();
+
             foreach (var item in items)
             {
                 Items.Add(item);
@@ -122,7 +165,8 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Помилка підключення до БД: {ex.Message}";
+            StatusMessage =
+                $"Помилка підключення до БД: {ex.Message}";
         }
         finally
         {
@@ -130,40 +174,61 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool CanAddItem => !string.IsNullOrWhiteSpace(NewItemTitle) && !IsLoading;
+
+    // Додавання картки
+
+    private bool CanAddItem =>
+        !string.IsNullOrWhiteSpace(NewItemTitle) && !IsLoading;
 
     [RelayCommand(CanExecute = nameof(CanAddItem))]
     public async Task AddItemAsync()
     {
         var title = NewItemTitle.Trim();
-        if (string.IsNullOrWhiteSpace(title)) return;
+
+        if (string.IsNullOrWhiteSpace(title))
+            return;
 
         try
         {
             IsLoading = true;
             StatusMessage = "Збереження в базу даних...";
 
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            await using var db =
+                await _dbContextFactory.CreateDbContextAsync();
 
             var tagsToAssign = new List<Tag>();
+
             if (!string.IsNullOrWhiteSpace(NewItemTags))
             {
-                var tagNames = NewItemTags.Split(new[] { ',', '#' }, StringSplitOptions.RemoveEmptyEntries)
-                                          .Select(t => t.Trim().ToLower())
-                                          .Where(t => !string.IsNullOrEmpty(t))
-                                          .Distinct()
-                                          .ToList();
+                var tagNames = NewItemTags
+                    .Split(
+                        new[] { ',', '#' },
+                        StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim().ToLower())
+                    .Where(t => !string.IsNullOrEmpty(t))
+                    .Distinct()
+                    .ToList();
 
-                var existingTags = await db.Tags.Where(t => tagNames.Contains(t.Name.ToLower())).ToListAsync();
+                var existingTags = await db.Tags
+                    .Where(t => tagNames.Contains(t.Name.ToLower()))
+                    .ToListAsync();
 
                 foreach (var tagName in tagNames)
                 {
-                    var tag = existingTags.FirstOrDefault(t => t.Name.ToLower() == tagName);
+                    var tag = existingTags.FirstOrDefault(
+                        t => t.Name.ToLower() == tagName);
+
                     if (tag == null)
                     {
-                        tag = new Tag { Id = Guid.NewGuid(), Name = tagName };
+                        tag = new Tag
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = tagName
+                        };
+
                         db.Tags.Add(tag);
                     }
+
                     tagsToAssign.Add(tag);
                 }
             }
@@ -179,18 +244,23 @@ public partial class MainViewModel : ObservableObject
             };
 
             db.MediaItems.Add(newItem);
+
             await db.SaveChangesAsync();
 
             Items.Insert(0, newItem);
+
             NewItemTitle = string.Empty;
             NewItemTags = string.Empty;
-            StatusMessage = $"Картку «{title}» успішно збережено!";
+
+            StatusMessage =
+                $"Картку «{title}» успішно збережено!";
 
             ApplyFilter();
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Не вдалося зберегти картку: {ex.Message}";
+            StatusMessage =
+                $"Не вдалося зберегти картку: {ex.Message}";
         }
         finally
         {
@@ -198,32 +268,116 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+
+    // Оновлення статусу картки
+
     [RelayCommand]
     public async Task UpdateItemStatusAsync(MediaItem item)
     {
-        if (item == null) return;
+        if (item == null)
+            return;
 
         try
         {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            await using var db =
+                await _dbContextFactory.CreateDbContextAsync();
 
-            var existingItem = await db.MediaItems.FindAsync(item.Id);
+            var existingItem =
+                await db.MediaItems.FindAsync(item.Id);
+
             if (existingItem != null)
             {
+                // Захист від нескінченного циклу оновлення WPF
+                if (existingItem.Status == item.Status)
+                {
+                    if (item.Status == MediaStatusExtensions.Completed &&
+                        item.Review == null)
+                    {
+                        item.Review = new Review
+                        {
+                            MediaItemId = item.Id
+                        };
+                    }
+
+                    return;
+                }
+
                 existingItem.Status = item.Status;
+
                 await db.SaveChangesAsync();
 
-                StatusMessage = $"Статус успішно змінено на «{item.Status}»";
+                if (item.Status == MediaStatusExtensions.Completed &&
+                    item.Review == null)
+                {
+                    item.Review = new Review
+                    {
+                        MediaItemId = item.Id
+                    };
+                }
+
+                StatusMessage =
+                    $"Статус успішно змінено на «{item.Status}»";
+
                 ApplyFilter();
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Помилка оновлення: {ex.InnerException?.Message ?? ex.Message}";
+            StatusMessage =
+                $"Помилка оновлення: {ex.InnerException?.Message ?? ex.Message}";
         }
     }
 
-    private sealed class DesignTimeDbContextFactory : IDbContextFactory<ShoShoDbContext>
+
+    // Збереження відгуку
+
+    [RelayCommand]
+    public async Task SaveReviewAsync(MediaItem item)
+    {
+        if (item == null || item.Review == null)
+            return;
+
+        if (item.Review.Rating < 1)
+            item.Review.Rating = 1;
+
+        if (item.Review.Rating > 5)
+            item.Review.Rating = 5;
+
+        try
+        {
+            await using var db =
+                await _dbContextFactory.CreateDbContextAsync();
+
+            var existingReview = await db.Reviews
+                .FirstOrDefaultAsync(r => r.MediaItemId == item.Id);
+
+            if (existingReview != null)
+            {
+                existingReview.Rating = item.Review.Rating;
+                existingReview.Text = item.Review.Text;
+            }
+            else
+            {
+                db.Reviews.Add(item.Review);
+            }
+
+            await db.SaveChangesAsync();
+
+            StatusMessage =
+                $"Відгук для «{item.Title}» збережено!";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage =
+                $"Помилка збереження відгуку: {ex.InnerException?.Message ?? ex.Message}";
+        }
+    }
+
+
+    // Фабрика контексту для дизайнера
+
+    private sealed class DesignTimeDbContextFactory
+        : IDbContextFactory<ShoShoDbContext>
     {
         public ShoShoDbContext CreateDbContext()
         {

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace ShoSho.Core.Models;
 
 public class MediaItem
@@ -10,4 +13,7 @@ public class MediaItem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+
+    public Review? Review { get; set; }
+    
 }

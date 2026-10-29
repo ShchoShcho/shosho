@@ -13,6 +13,8 @@ public class ShoShoDbContext : DbContext
     public DbSet<MediaItem> MediaItems { get; set; } = null!;
     public DbSet<Tag> Tags { get; set; } = null!;
 
+    public DbSet<Review> Reviews { get; set; } = null!;
+
     public ShoShoDbContext() { }
 
     public ShoShoDbContext(DbContextOptions<ShoShoDbContext> options) : base(options) { }
@@ -25,7 +27,6 @@ public class ShoShoDbContext : DbContext
             if (string.IsNullOrWhiteSpace(connection.DataSource))
                 throw new ArgumentException("SQLite database file must be specified.", nameof(connectionString));
 
-            // Relative paths are per-user and independent of the working directory.
             var dataDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ShoSho");
             connection.DataSource = Path.GetFullPath(connection.DataSource, dataDirectory);
@@ -60,7 +61,6 @@ public class ShoShoDbContext : DbContext
                 value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
         });
 
-       
         modelBuilder.Entity<Tag>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -72,5 +72,18 @@ public class ShoShoDbContext : DbContext
             .HasMany(m => m.Tags)
             .WithMany(t => t.MediaItems)
             .UsingEntity(j => j.ToTable("ItemTag"));
+
+        modelBuilder.Entity<Review>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Text).HasMaxLength(2000);
+            entity.Property(e => e.Rating).IsRequired();
+        });
+
+        modelBuilder.Entity<MediaItem>()
+            .HasOne(m => m.Review)
+            .WithOne(r => r.MediaItem)
+            .HasForeignKey<Review>(r => r.MediaItemId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
