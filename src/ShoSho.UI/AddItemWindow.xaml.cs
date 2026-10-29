@@ -16,13 +16,19 @@ public partial class AddItemWindow : Window
     public int? Rating => int.TryParse(RatingInput.Text, out var rating) ? rating : null;
     public string Review => ReviewInput.Text.Trim();
 
-    public AddItemWindow(string title = "", string tags = "")
+    public AddItemWindow(string title = "", string tags = "",
+        IEnumerable<string>? types = null, string? selectedType = null)
     {
         InitializeComponent();
         TitleInput.Text = title;
         TagsInput.Text = tags;
-        TypeInput.ItemsSource = new[] { "Книга", "Фільм", "Серіал", "Гра", "Інше" };
-        TypeInput.SelectedIndex = 0;
+
+        var typeList = (types ?? new[] { "Книга", "Фільм", "Серіал", "Гра", "Інше" }).ToList();
+        TypeInput.ItemsSource = typeList;
+        TypeInput.SelectedItem = selectedType != null && typeList.Contains(selectedType)
+            ? selectedType
+            : typeList[0];
+
         StatusInput.ItemsSource = Enum.GetValues<MediaStatus>().Select(s => s.ToDisplayName());
         StatusInput.SelectedIndex = 0;
 

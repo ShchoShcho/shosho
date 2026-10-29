@@ -1,0 +1,20 @@
+<Window x:Class="ShoSho.UI.CreateCategoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Нова категорія" Width="380" SizeToContent="Height"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+        Background="#F5EFE6" FontFamily="Segoe UI">
+    <StackPanel Margin="24">
+        <TextBlock Text="Назва категорії" FontSize="12" FontWeight="SemiBold" Foreground="#7C6D65" Margin="0,0,0,6"/>
+        <TextBox x:Name="NameBox" MaxLength="30" FontSize="14" Padding="8"/>
+        <TextBlock x:Name="ErrorText" Foreground="#C27A63" FontSize="12" Margin="0,6,0,0" Visibility="Collapsed"/>
+
+        <TextBlock Text="Іконка (емодзі)" FontSize="12" FontWeight="SemiBold" Foreground="#7C6D65" Margin="0,16,0,6"/>
+        <TextBox x:Name="IconBox" MaxLength="8" FontSize="14" Padding="8"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+            <Button Content="Скасувати" IsCancel="True" Padding="16,8" Margin="0,0,8,0"/>
+            <Button Content="Створити" IsDefault="True" Padding="16,8" Click="Create_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
