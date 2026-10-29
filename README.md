@@ -53,22 +53,26 @@ dotnet publish src/ShoSho.UI -c Release -r win-x64 --self-contained true -o publ
 Не видаляйте стару базу до перевірки перенесення.
 
 Для резервної копії закрийте всі екземпляри ShoSho та скопіюйте файл `shosho.db`.
+Збережіть також `%APPDATA%\ShoSho\categories.json` (власні категорії та піктограми), якщо він існує,
+і власні файли обкладинок, якщо записи посилаються на них. Кеш `%LOCALAPPDATA%\ShoSho\Cache` можна відновити завантаженням постерів із мережі.
 Якщо поруч залишилися `shosho.db-wal` або `shosho.db-shm`, копіюйте їх разом із базою.
 Відновлюйте також із закритою програмою. Оновлення файлів програми не видаляє колекцію.
 Файл бази не зашифрований. Спільної серверної колекції та синхронізації між комп'ютерами немає.
 
 SQLite підходить для локального застосунку, але має обмеження типів та зміни схеми:
 [документація Microsoft](https://learn.microsoft.com/en-us/ef/core/providers/sqlite/limitations).
-Історичні звіти в `docs/week*` описують попередні етапи з PostgreSQL.
+Актуальні [архітектура та SQLite-схема](docs/architecture.md) і [аудит відповідності вимогам](docs/compliance-audit.md). Початкові діаграми збережено як історичні матеріали.
 
 ## Перевірка
 
 ```powershell
 dotnet build ShoSho.slnx --disable-build-servers -m:1
-dotnet build tests/ShoSho.SqliteSmoke --disable-build-servers -m:1
 dotnet run --project tests/ShoSho.SqliteSmoke --no-build
+dotnet run --project tests/ShoSho.UiSmoke --no-build
 ```
 
 Перевірка створює окрему тимчасову SQLite-базу, застосовує міграції двічі,
 перевіряє відповідність snapshot, CRUD, повторне відкриття, Unicode, UTC та сортування.
 Користувацькі дані вона не змінює.
+
+WPF-перевірка додатково перевіряє фільтри, чернетку редагування, закриття без збереження, правила відгуків і збереження змін. Вона не замінює ручну перевірку інтерфейсу на різних DPI.
