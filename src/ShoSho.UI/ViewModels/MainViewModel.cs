@@ -438,6 +438,8 @@ public partial class MainViewModel : ObservableObject
                 }
                 RefreshCategoryCounts();
                 RefreshTagOptions();
+
+                ApplyFilter();
                 ApplySorting();
                 StatusMessage = $"Картку «{draft.Title}» успішно видалено.";
             }
