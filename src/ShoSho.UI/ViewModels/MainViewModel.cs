@@ -29,6 +29,15 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
+        // Тестовий запис для перевірки плейсхолдера та сітки без запуску програми
+        Items.Add(new MediaItem
+        {
+            Id = Guid.NewGuid(),
+            Title = "Тестовий фільм",
+            PosterUrl = null,
+            Status = MediaStatusExtensions.Planned,
+            CreatedAt = DateTime.UtcNow
+        });
     }
 
     [RelayCommand]
