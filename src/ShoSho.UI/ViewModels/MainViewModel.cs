@@ -34,6 +34,30 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedStatusFilter = "Усі";
 
+    [ObservableProperty] private string _searchText = string.Empty;
+    [ObservableProperty] private int _visibleCount;
+    [ObservableProperty] private string _tagButtonText = "Теги";
+    [ObservableProperty] private CategoryFilter? _selectedCategory;
+
+    public ObservableCollection<CategoryFilter> Categories { get; } = new();
+    public ObservableCollection<TagOption> AvailableTags { get; } = new();
+    private static readonly (string Name, string Icon, string Type)[] BuiltIn =
+    {
+        ("Фільми",  "🎬", "Фільм"),
+        ("Серіали", "📺", "Серіал"),
+        ("Книги",   "📚", "Книга"),
+        ("Ігри",    "🎮", "Гра"),
+        ("Інше",    "✨", "Інше"),
+    };
+
+    partial void OnSearchTextChanged(string value) => ApplyFilter();
+    partial void OnSelectedCategoryChanged(CategoryFilter? oldValue, CategoryFilter? newValue)
+    {
+        if (oldValue != null) oldValue.IsSelected = false;
+        if (newValue != null) newValue.IsSelected = true;
+        ApplyFilter();
+    }
+
     public ObservableCollection<MediaItem> Items { get; } = new();
 
     public List<string> AvailableStatuses { get; } = new()
@@ -66,9 +90,8 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(IDbContextFactory<ShoShoDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
+        BuildCategories();
     }
-
-    // Конструктор за замовчуванням для дизайнера XAML (Design-time)
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
@@ -101,38 +124,173 @@ public partial class MainViewModel : ObservableObject
     {
         var view = CollectionViewSource.GetDefaultView(Items);
 
-        if (string.IsNullOrWhiteSpace(SearchTagFilter) &&
-            (string.IsNullOrEmpty(SelectedStatusFilter) ||
-             SelectedStatusFilter == "Усі" ||
-             SelectedStatusFilter == "Усі статуси"))
-        {
-            view.Filter = null;
-            return;
-        }
+        var search = SearchText.Trim();
+        var category = SelectedCategory;
+        var status = SelectedStatusFilter;
+        var selectedTags = AvailableTags.Where(t => t.IsSelected).Select(t => t.Name).ToList();
+        bool anyStatus = string.IsNullOrEmpty(status) || status == "Усі" || status == "Усі статуси";
 
         view.Filter = obj =>
         {
-            if (obj is not MediaItem item)
+            if (obj is not MediaItem item) return false;
+
+            if (category != null && !category.Matches(item.Type?.ToString())) return false;
+            if (!anyStatus && item.Status != status) return false;
+            if (search.Length > 0 &&
+                (item.Title ?? string.Empty).IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0)
                 return false;
 
-            bool matchesStatus =
-                string.IsNullOrEmpty(SelectedStatusFilter) ||
-                SelectedStatusFilter == "Усі" ||
-                SelectedStatusFilter == "Усі статуси" ||
-                item.Status == SelectedStatusFilter;
-
-            bool matchesTag = true;
-
-            if (!string.IsNullOrWhiteSpace(SearchTagFilter))
-            {
-                matchesTag = item.Tags.Any(t =>
-                    t.Name.Contains(SearchTagFilter.Trim(), StringComparison.OrdinalIgnoreCase));
-            }
-
-            return matchesStatus && matchesTag;
+            return selectedTags.All(sel =>
+                item.Tags.Any(t => string.Equals(t.Name, sel, StringComparison.OrdinalIgnoreCase)));
         };
+
+        VisibleCount = view.Cast<object>().Count();
     }
 
+    // ---------- Категорії ----------
+    private void BuildCategories()
+    {
+        Categories.Clear();
+        Categories.Add(new CategoryFilter("Усі враження", "🗂", null));
+        foreach (var (name, icon, type) in BuiltIn)
+            Categories.Add(new CategoryFilter(name, icon, type));
+        foreach (var c in CategoryStore.Load())
+            Categories.Add(new CategoryFilter(c.Name, c.Icon, c.Name, isCustom: true));
+
+        SelectedCategory = Categories[0];
+    }
+    private void RefreshCategoryCounts()
+    {
+        foreach (var c in Categories)
+            c.Count = Items.Count(i => c.Matches(i.Type?.ToString()));
+    }
+
+    [RelayCommand]
+    private void SelectCategory(CategoryFilter? category)
+    {
+        if (category != null) SelectedCategory = category;
+    }
+
+    [RelayCommand]
+    private void CreateCategory()
+    {
+        var taken = Categories.Select(c => c.Name).Concat(Categories.Where(c => c.TypeValue != null).Select(c => c.TypeValue!));
+        var window = new CreateCategoryWindow(taken);
+        if (Application.Current?.MainWindow is Window owner) window.Owner = owner;
+        if (window.ShowDialog() != true) return;
+
+        var category = new CategoryFilter(window.CategoryName, window.CategoryIcon,
+            window.CategoryName, isCustom: true);
+        Categories.Add(category);
+
+        try
+        {
+            CategoryStore.Save(Categories.Where(c => c.IsCustom)
+                .Select(c => new CustomCategory(c.Name, c.Icon)));
+            StatusMessage = $"Категорію «{category.Name}» створено.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Категорію створено, але не збережено: {ex.Message}";
+        }
+
+        RefreshCategoryCounts();
+        SelectedCategory = category;
+    }
+
+    [RelayCommand]
+    private async Task DeleteCategoryAsync(CategoryFilter? category)
+    {
+        if (category is not { IsCustom: true }) return;
+
+        var affectedItems = Items.Where(i => category.Matches(i.Type)).ToList();
+
+        var text = affectedItems.Count > 0
+            ? $"Видалити категорію «{category.Name}»?\nЗаписів: {affectedItems.Count}. Вони будуть переміщені до категорії «Інше»."
+            : $"Видалити категорію «{category.Name}»?";
+
+        if (MessageBox.Show(text, "Видалення категорії",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            if (affectedItems.Count > 0)
+            {
+                await using var db = await _dbContextFactory.CreateDbContextAsync();
+                var stored = (await db.MediaItems.ToListAsync())
+                    .Where(m => category.Matches(m.Type));
+                foreach (var m in stored) m.Type = "Інше";
+                await db.SaveChangesAsync();
+
+                // оновлюємо картки в UI
+                foreach (var item in affectedItems)
+                {
+                    item.Type = "Інше";
+                    var index = Items.IndexOf(item);
+                    if (index >= 0) Items[index] = item;
+                }
+            }
+
+            if (SelectedCategory == category)
+                SelectedCategory = Categories[0];
+
+            Categories.Remove(category);
+            CategoryStore.Save(Categories.Where(c => c.IsCustom)
+                .Select(c => new CustomCategory(c.Name, c.Icon)));
+
+            RefreshCategoryCounts();
+            RefreshTagOptions();
+            StatusMessage = $"Категорію «{category.Name}» видалено.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Не вдалося видалити категорію: {ex.Message}";
+        }
+    }
+
+    // ---------- Теги ----------
+    private void RefreshTagOptions()
+    {
+        var selected = AvailableTags.Where(t => t.IsSelected).Select(t => t.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var t in AvailableTags) t.PropertyChanged -= OnTagOptionChanged;
+        AvailableTags.Clear();
+
+        var names = Items.SelectMany(i => i.Tags).Select(t => t.Name)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase);
+
+        foreach (var name in names)
+        {
+            var option = new TagOption(name) { IsSelected = selected.Contains(name) };
+            option.PropertyChanged += OnTagOptionChanged;
+            AvailableTags.Add(option);
+        }
+
+        UpdateTagSummary();
+        ApplyFilter();
+    }
+
+    private void OnTagOptionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(TagOption.IsSelected)) return;
+        UpdateTagSummary();
+        ApplyFilter();
+    }
+
+    private void UpdateTagSummary()
+    {
+        var n = AvailableTags.Count(t => t.IsSelected);
+        TagButtonText = n == 0 ? "Теги" : $"Теги: {n}";
+    }
+
+    [RelayCommand]
+    private void ClearTags()
+    {
+        foreach (var t in AvailableTags) t.IsSelected = false;
+    }
 
     // Завантаження даних
 
@@ -160,7 +318,8 @@ public partial class MainViewModel : ObservableObject
                 await CachePosterAsync(item);
                 Items.Add(item);
             }
-
+            RefreshCategoryCounts();
+            RefreshTagOptions();
             ApplySorting();
             StatusMessage = $"Завантажено карток: {Items.Count}";
         }
@@ -179,7 +338,9 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public async Task AddItemAsync()
     {
-        var addWindow = new AddItemWindow();
+        var addWindow = new AddItemWindow(
+            types: Categories.Where(c => c.TypeValue != null).Select(c => c.TypeValue!),
+            selectedType: SelectedCategory?.TypeValue);
         if (Application.Current?.MainWindow is Window owner)
             addWindow.Owner = owner;
 
@@ -213,6 +374,8 @@ public partial class MainViewModel : ObservableObject
                 await CachePosterAsync(newItem);
                 // Додаємо картку на початок списку в UI
                 Items.Insert(0, newItem);
+                RefreshCategoryCounts();
+                RefreshTagOptions();
                 StatusMessage = $"Картку «{newItem.Title}» успішно збережено!";
             }
             catch (Exception ex)
@@ -255,10 +418,10 @@ public partial class MainViewModel : ObservableObject
             .SingleAsync(x => x.Id == item.Id);
 
         return new ItemDetailsViewModel(
-            stored, 
-            item.PosterUrl, 
+            stored,
+            item.PosterUrl,
             SaveItemDetailsAsync,
-            delete: async draft => 
+            delete: async draft =>
             {
                 await using var deleteDb = await _dbContextFactory.CreateDbContextAsync();
                 var dbItem = await deleteDb.MediaItems.FindAsync(draft.Id);
@@ -273,8 +436,8 @@ public partial class MainViewModel : ObservableObject
                 {
                     Items.Remove(target);
                 }
-
-                ApplyFilter();
+                RefreshCategoryCounts();
+                RefreshTagOptions();
                 ApplySorting();
                 StatusMessage = $"Картку «{draft.Title}» успішно видалено.";
             }
@@ -309,7 +472,8 @@ public partial class MainViewModel : ObservableObject
         await CachePosterAsync(stored);
         var previous = Items.FirstOrDefault(x => x.Id == stored.Id);
         if (previous != null) Items[Items.IndexOf(previous)] = stored;
-        ApplyFilter();
+        RefreshCategoryCounts();
+        RefreshTagOptions();
         ApplySorting();
         StatusMessage = $"Зміни до «{stored.Title}» збережено.";
     }
@@ -403,8 +567,12 @@ public partial class MainViewModel : ObservableObject
             }
             else
             {
-                db.Reviews.Add(new Review { MediaItemId = item.Id,
-                    Rating = item.Review.Rating, Text = item.Review.Text });
+                db.Reviews.Add(new Review
+                {
+                    MediaItemId = item.Id,
+                    Rating = item.Review.Rating,
+                    Text = item.Review.Text
+                });
             }
 
             await db.SaveChangesAsync();

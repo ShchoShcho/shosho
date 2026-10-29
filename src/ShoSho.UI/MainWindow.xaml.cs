@@ -33,4 +33,5 @@ public partial class MainWindow : Window
             }
         }
     }
+    private void CloseTagPopup_Click(object sender, RoutedEventArgs e) => TagToggle.IsChecked = false;
 }
