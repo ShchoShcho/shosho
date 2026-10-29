@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Data;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,10 +18,20 @@ public partial class MainViewModel : ObservableObject
     private readonly IDbContextFactory<ShoShoDbContext> _dbContextFactory;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddItemCommand))]
+    private string _newItemTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _newItemTags = string.Empty;
+
+    [ObservableProperty]
     private string _statusMessage = string.Empty;
 
     [ObservableProperty]
     private bool _isLoading;
+
+    [ObservableProperty]
+    private string _searchTagFilter = string.Empty;
 
     public ObservableCollection<MediaItem> Items { get; } = new();
 
@@ -40,6 +55,28 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
+    partial void OnSearchTagFilterChanged(string value)
+    {
+        var view = CollectionViewSource.GetDefaultView(Items);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            view.Filter = null;
+        }
+        else
+        {
+            var searchTarget = value.Trim().ToLower();
+            view.Filter = obj =>
+            {
+                if (obj is MediaItem item)
+                {
+                    return item.Tags.Any(t => t.Name.ToLower().Contains(searchTarget));
+                }
+                return false;
+            };
+        }
+    }
+
     [RelayCommand]
     public async Task InitializeAsync()
     {
@@ -49,11 +86,11 @@ public partial class MainViewModel : ObservableObject
             StatusMessage = "Підключення до бази даних...";
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            
-            // Автоматичне застосування міграцій при старті
+
             await db.Database.MigrateAsync();
 
             var items = await db.MediaItems
+                .Include(m => m.Tags)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
@@ -83,7 +120,51 @@ public partial class MainViewModel : ObservableObject
         
         if (Application.Current.MainWindow != null && Application.Current.MainWindow != addWindow)
         {
-            addWindow.Owner = Application.Current.MainWindow;
+            IsLoading = true;
+            StatusMessage = "Збереження в базу даних...";
+
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var tagsToAssign = new List<Tag>();
+            if (!string.IsNullOrWhiteSpace(NewItemTags))
+            {
+                var tagNames = NewItemTags.Split(new[] { ',', '#' }, StringSplitOptions.RemoveEmptyEntries)
+                                          .Select(t => t.Trim().ToLower())
+                                          .Where(t => !string.IsNullOrEmpty(t))
+                                          .Distinct()
+                                          .ToList();
+
+                var existingTags = await db.Tags.Where(t => tagNames.Contains(t.Name.ToLower())).ToListAsync();
+
+                foreach (var tagName in tagNames)
+                {
+                    var tag = existingTags.FirstOrDefault(t => t.Name.ToLower() == tagName);
+                    if (tag == null)
+                    {
+                        tag = new Tag { Id = Guid.NewGuid(), Name = tagName };
+                        db.Tags.Add(tag);
+                    }
+                    tagsToAssign.Add(tag);
+                }
+            }
+
+            var newItem = new MediaItem
+            {
+                Id = Guid.NewGuid(),
+                Title = title,
+                Description = string.Empty,
+                Status = MediaStatusExtensions.Planned,
+                CreatedAt = DateTime.UtcNow,
+                Tags = tagsToAssign
+            };
+
+            db.MediaItems.Add(newItem);
+            await db.SaveChangesAsync();
+
+            Items.Insert(0, newItem);
+            NewItemTitle = string.Empty;
+            NewItemTags = string.Empty;
+            StatusMessage = $"Картку «{title}» успішно збережено!";
         }
 
         // Якщо користувач натиснув «Зберегти» у модальному вікні
