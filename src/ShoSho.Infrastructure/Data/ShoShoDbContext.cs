@@ -60,7 +60,13 @@ public class ShoShoDbContext : DbContext
                 value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
         });
 
-       
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
         modelBuilder.Entity<Tag>(entity =>
         {
             entity.HasKey(e => e.Id);

@@ -67,174 +67,150 @@
         <Grid Grid.Column="1" Margin="40,17,40,20" Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <!-- 0: Заголовок -->
                 <RowDefinition Height="Auto" />
+                <!-- 1: Вкладки фільтрів -->
+                <RowDefinition Height="Auto" />
+                <!-- 2: Поле вводу -->
                 <RowDefinition Height="*" />
+                <!-- 3: Сітка карток -->
                 <RowDefinition Height="Auto" />
+                <!-- 4: Статус-бар -->
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,32">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <!-- Заголовок -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,25">
+                <TextBlock Text="МОЯ КОЛЕКЦІЯ - 2026" FontSize="11" Foreground="#B89F89" FontWeight="SemiBold" Margin="0,0,0,5" />
+                <TextBlock Text="Каталог вражень" FontSize="32" FontFamily="Georgia" Foreground="#2C221E" />
+                <TextBlock Text="Фільми, книжки й світи, до яких хочеться повернутися." FontSize="14" Foreground="#78685E" Margin="0,6,0,0" />
+            </StackPanel>
 
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="МОЯ КОЛЕКЦІЯ - 2026" FontSize="11" Foreground="#A68A77" FontWeight="Bold" Margin="0,0,0,8" />
-                    <TextBlock Text="Каталог вражень" FontSize="38" FontFamily="Georgia" Foreground="#2B231F" />
-                    <TextBlock Text="Фільми, книжки й світи, до яких хочеться повернутися." FontSize="15" Foreground="#7C6D65" Margin="0,8,0,0" />
-                </StackPanel>
+            <!-- Вкладки фільтрації статусів (НОВИЙ БЛОК) -->
+            <!-- Вкладки фільтрації статусів -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
+                <StackPanel.Resources>
+                    <!-- Цей стиль перетворює стандартний RadioButton на твій красивий текст -->
+                    <Style TargetType="RadioButton" x:Key="FilterTabStyle">
+                        <Setter Property="GroupName" Value="StatusFilters" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Margin" Value="0,0,24,0" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <TextBlock x:Name="TabText" 
+                                               Text="{TemplateBinding Content}" 
+                                               FontSize="14" 
+                                               Foreground="#78685E" />
+                                    <!-- Якщо вкладка активна, робимо її помаранчевою і напівжирною -->
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="TabText" Property="Foreground" Value="#D08770" />
+                                            <Setter TargetName="TabText" Property="FontWeight" Value="SemiBold" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </StackPanel.Resources>
 
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
-                    <StackPanel Margin="0,0,0,0">
-                        <TextBlock Text="СТАТУС" FontSize="11" FontWeight="Bold" Foreground="#A68A77" Margin="0,0,0,6" />
-                        <ComboBox ItemsSource="{Binding AvailableStatuses}"
-                                  SelectedItem="{Binding SelectedStatusFilter, Mode=TwoWay}"
-                                  Background="#FDFBFC" BorderBrush="#EADECF" BorderThickness="1"
-                                  Foreground="#322824" FontSize="14" Padding="12,8" Width="140" Cursor="Hand">
-                            <ComboBox.Style>
-                                <Style TargetType="ComboBox">
-                                    <Setter Property="IsEditable" Value="True"/>
-                                    <Setter Property="Text" Value="Усі статуси"/>
-                                    <Setter Property="IsReadOnly" Value="True"/>
-                                </Style>
-                            </ComboBox.Style>
-                            <ComboBox.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="8" />
-                                </Style>
-                            </ComboBox.Resources>
-                        </ComboBox>
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
+                <RadioButton Content="Усі" IsChecked="True" 
+                             Style="{StaticResource FilterTabStyle}" 
+                             Command="{Binding FilterItemsCommand}" CommandParameter="Всі" />
 
-            <Grid Grid.Row="1" Margin="0,0,0,24">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="20" />
-                    <ColumnDefinition Width="300" />
-                </Grid.ColumnDefinitions>
+                <RadioButton Content="Хочу" 
+                             Style="{StaticResource FilterTabStyle}" 
+                             Command="{Binding FilterItemsCommand}" CommandParameter="Хочу" />  
 
-                <Border Grid.Column="0" Background="#FDFBFC" CornerRadius="12" Padding="20" BorderBrush="#EADECF" BorderThickness="1">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                <RadioButton Content="Ін прогрес" 
+                             Style="{StaticResource FilterTabStyle}" 
+                             Command="{Binding FilterItemsCommand}" CommandParameter="Ін прогрес" />
 
-                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,12" ToolTip="Введіть назву фільму, серіалу або гри" />
-                        <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding NewItemTags, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0" ToolTip="Введіть теги через кому (наприклад: драйв, затишне, навчання)" />
+                <RadioButton Content="Вже всьо"
+                             Style="{StaticResource FilterTabStyle}" 
+                             Command="{Binding FilterItemsCommand}" CommandParameter="Вже всьо" />
 
-                        <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Command="{Binding AddItemCommand}" Content="+ Додати" FontSize="15" FontWeight="SemiBold" Foreground="White" Background="#C27A63" BorderThickness="0" Padding="28,0" Cursor="Hand" IsDefault="True">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="8" />
-                                </Style>
-                            </Button.Resources>
-                        </Button>
-                    </Grid>
-                </Border>
+                <RadioButton Content="Вагаюсі" Margin="0"
+                             Style="{StaticResource FilterTabStyle}" 
+                             Command="{Binding FilterItemsCommand}" CommandParameter="Вагаюсі" />       
+            </StackPanel>
 
-                <Border Grid.Column="2" Background="#FDFBFC" CornerRadius="12" Padding="20" BorderBrush="#EADECF" BorderThickness="1">
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="ФІЛЬТР ЗА ТЕГОМ" FontSize="11" FontWeight="Bold" Foreground="#A68A77" Margin="0,0,0,10" />
-                        <TextBox Text="{Binding SearchTagFilter, UpdateSourceTrigger=PropertyChanged}" ToolTip="Шукати за тегом (наприклад: драйв)" />
-                    </StackPanel>
-                </Border>
-            </Grid>
+            <!-- Input Bar (переміщено на Grid.Row="2") -->
+            <Border Grid.Row="2" Background="#FAF6F0" CornerRadius="8" Padding="12" Margin="0,0,0,20" BorderBrush="#D4C9BC" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="2">
-                <TextBlock Text="Поки що немає збережених записів. Додайте свій перший фільм чи гру вище!" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A68A77" FontSize="15" FontStyle="Italic">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Items.Count}" Value="0">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                    <TextBox x:Name="ItemTitleTextBox" Grid.Column="0" Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}" FontSize="15" VerticalContentAlignment="Center" Padding="12,10" BorderThickness="1" BorderBrush="#E3DCD2" Background="White" Foreground="#2C221E" Margin="0,0,10,0" ToolTip="Введіть назву фільму, серіалу або гри" />
 
-                <ListBox ItemsSource="{Binding Items}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="0" />
-                            <Setter Property="Margin" Value="0,0,0,12" />
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <ContentPresenter />
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#FDFBFC" BorderBrush="#EADECF" BorderThickness="1" CornerRadius="12" Padding="24,20">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1" Command="{Binding AddItemCommand}" Content="Додати" FontSize="14" FontWeight="SemiBold" Foreground="White" Background="#D08770" BorderThickness="0" Padding="24,10" Cursor="Hand" IsDefault="True">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6" />
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
+            </Border>
 
-                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}" FontSize="18" FontFamily="Georgia" FontWeight="SemiBold" Foreground="#2B231F" />
-                                        <TextBlock Text="{Binding CreatedAt, StringFormat='Додано: \{0:dd.MM.yyyy\}'}" FontSize="12" Foreground="#A68A77" Margin="0,4,0,12" />
+            <!-- Media Items List (переміщено на Grid.Row="3") -->
+            <Border Grid.Row="3" Background="#FAF6F0" CornerRadius="8" Padding="16" BorderBrush="#D4C9BC" BorderThickness="1">
+                <Grid>
+                    <TextBlock Text="Поки що немає збережених записів. Додайте свій перший фільм чи гру вище!" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#A3968C" FontSize="14" FontStyle="Italic">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Items.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
 
-                                        <ItemsControl ItemsSource="{Binding Tags}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel Orientation="Horizontal" />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="#EFE8DD" CornerRadius="12" Margin="0,0,8,6" Padding="12,4">
-                                                        <TextBlock Text="{Binding Name}" Foreground="#5D4F46" FontSize="12" FontWeight="SemiBold" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" BorderThickness="0">
+                        <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="140" Height="210" Margin="0,0,15,15" Background="#EFECE6" CornerRadius="8" ClipToBounds="True" BorderBrush="#D4CBC0" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
 
-                                    <ComboBox Grid.Column="1"
-                                              ItemsSource="{Binding DataContext.AvailableStatuses, RelativeSource={RelativeSource AncestorType=Window}}"
-                                              SelectedItem="{Binding Status, Mode=TwoWay}"
-                                              SelectionChanged="StatusComboBox_SelectionChanged"
-                                              Background="#E6DFD3"
-                                              BorderThickness="0"
-                                              Foreground="#5D4F46"
-                                              FontWeight="Bold"
-                                              FontSize="12"
-                                              VerticalAlignment="Top"
-                                              Margin="0,4,0,0"
-                                              Padding="12,6"
-                                              Width="115"
-                                              Cursor="Hand">
-                                        <ComboBox.Resources>
-                                            <Style TargetType="Border">
-                                                <Setter Property="CornerRadius" Value="12" />
-                                            </Style>
-                                        </ComboBox.Resources>
-                                    </ComboBox>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
+                                            <Image Grid.Row="0" 
+                                                   Source="{Binding PosterUrl, IsAsync=True, TargetNullValue='pack://application:,,,/Assets/placeholder.jpg', FallbackValue='pack://application:,,,/Assets/placeholder.jpg'}" 
+                                                   Stretch="UniformToFill" 
+                                                   VerticalAlignment="Center"/>
 
-            <StatusBar Grid.Row="3" Background="Transparent" Margin="0,16,0,0" Padding="0">
+                                            <Border Grid.Row="1" Background="#261E1A" Padding="8,10">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" Foreground="#F4EFEA" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap" MaxHeight="36" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Status}" Foreground="#A3968C" FontSize="11" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Status Bar (переміщено на Grid.Row="4") -->
+            <StatusBar Grid.Row="4" Background="Transparent" Margin="0,12,0,0" Padding="0">
                 <StatusBarItem Padding="0">
-                    <TextBlock Text="{Binding StatusMessage}" FontSize="13" Foreground="#7C6D65" />
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#78685E" />
                 </StatusBarItem>
             </StatusBar>
         </Grid>
