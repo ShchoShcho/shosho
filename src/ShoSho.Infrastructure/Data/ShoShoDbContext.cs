@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using ShoSho.Core.Models;
+using System;
+using System.IO;
 
 namespace ShoSho.Infrastructure.Data;
 
@@ -9,15 +11,11 @@ public class ShoShoDbContext : DbContext
     public const string DefaultConnectionString = "Data Source=shosho.db";
 
     public DbSet<MediaItem> MediaItems { get; set; } = null!;
+    public DbSet<Tag> Tags { get; set; } = null!;
 
-    public ShoShoDbContext()
-    {
-    }
+    public ShoShoDbContext() { }
 
-    public ShoShoDbContext(DbContextOptions<ShoShoDbContext> options)
-        : base(options)
-    {
-    }
+    public ShoShoDbContext(DbContextOptions<ShoShoDbContext> options) : base(options) { }
 
     public static void Configure(DbContextOptionsBuilder optionsBuilder, string connectionString)
     {
@@ -61,5 +59,24 @@ public class ShoShoDbContext : DbContext
                 value => value.ToUniversalTime(),
                 value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
         });
+
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<MediaItem>()
+            .HasMany(m => m.Tags)
+            .WithMany(t => t.MediaItems)
+            .UsingEntity(j => j.ToTable("ItemTag"));
     }
 }

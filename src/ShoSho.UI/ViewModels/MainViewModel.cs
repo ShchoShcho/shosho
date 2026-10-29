@@ -1,5 +1,11 @@
 using ShoSho.UI.Services;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Data;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
@@ -19,10 +25,16 @@ public partial class MainViewModel : ObservableObject
     private string _newItemTitle = string.Empty;
 
     [ObservableProperty]
+    private string _newItemTags = string.Empty;
+
+    [ObservableProperty]
     private string _statusMessage = string.Empty;
 
     [ObservableProperty]
     private bool _isLoading;
+
+    [ObservableProperty]
+    private string _searchTagFilter = string.Empty;
 
     public ObservableCollection<MediaItem> Items { get; } = new();
 
@@ -31,6 +43,7 @@ public partial class MainViewModel : ObservableObject
         _dbContextFactory = dbContextFactory;
     }
 
+    // Конструктор за замовчуванням для дизайнера XAML (Design-time)
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
@@ -44,6 +57,28 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
+    partial void OnSearchTagFilterChanged(string value)
+    {
+        var view = CollectionViewSource.GetDefaultView(Items);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            view.Filter = null;
+        }
+        else
+        {
+            var searchTarget = value.Trim().ToLower();
+            view.Filter = obj =>
+            {
+                if (obj is MediaItem item)
+                {
+                    return item.Tags.Any(t => t.Name.ToLower().Contains(searchTarget));
+                }
+                return false;
+            };
+        }
+    }
+
     [RelayCommand]
     public async Task InitializeAsync()
     {
@@ -53,15 +88,18 @@ public partial class MainViewModel : ObservableObject
             StatusMessage = "Підключення до бази даних...";
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
+
             await db.Database.MigrateAsync();
 
             var items = await db.MediaItems
+                .Include(m => m.Tags)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
             Items.Clear();
             foreach (var item in items)
             {
+                // Кешуємо зображення: якщо це веб-посилання, завантажуємо локально і підміняємо шлях для UI
                 if (!string.IsNullOrWhiteSpace(item.PosterUrl) && item.PosterUrl.StartsWith("http"))
                 {
                     var localPath = await ImageCacheService.GetLocalPosterAsync(item.PosterUrl);
@@ -85,19 +123,41 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool CanAddItem => !string.IsNullOrWhiteSpace(NewItemTitle) && !IsLoading;
-
-    [RelayCommand(CanExecute = nameof(CanAddItem))]
+    // Команда відкриття модального вікна та збереження нового запису
+    [RelayCommand]
     public async Task AddItemAsync()
     {
-        var title = NewItemTitle.Trim();
-        if (string.IsNullOrWhiteSpace(title))
-            return;
-
-        try
+        var addWindow = new AddItemWindow();
+        
+        if (Application.Current.MainWindow != null && Application.Current.MainWindow != addWindow)
         {
             IsLoading = true;
             StatusMessage = "Збереження в базу даних...";
+
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var tagsToAssign = new List<Tag>();
+            if (!string.IsNullOrWhiteSpace(NewItemTags))
+            {
+                var tagNames = NewItemTags.Split(new[] { ',', '#' }, StringSplitOptions.RemoveEmptyEntries)
+                                          .Select(t => t.Trim().ToLower())
+                                          .Where(t => !string.IsNullOrEmpty(t))
+                                          .Distinct()
+                                          .ToList();
+
+                var existingTags = await db.Tags.Where(t => tagNames.Contains(t.Name.ToLower())).ToListAsync();
+
+                foreach (var tagName in tagNames)
+                {
+                    var tag = existingTags.FirstOrDefault(t => t.Name.ToLower() == tagName);
+                    if (tag == null)
+                    {
+                        tag = new Tag { Id = Guid.NewGuid(), Name = tagName };
+                        db.Tags.Add(tag);
+                    }
+                    tagsToAssign.Add(tag);
+                }
+            }
 
             var newItem = new MediaItem
             {
@@ -105,24 +165,57 @@ public partial class MainViewModel : ObservableObject
                 Title = title,
                 Description = string.Empty,
                 Status = MediaStatusExtensions.Planned,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Tags = tagsToAssign
             };
 
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
             db.MediaItems.Add(newItem);
             await db.SaveChangesAsync();
 
             Items.Insert(0, newItem);
             NewItemTitle = string.Empty;
+            NewItemTags = string.Empty;
             StatusMessage = $"Картку «{title}» успішно збережено!";
         }
-        catch (Exception ex)
+
+        // Якщо користувач натиснув «Зберегти» у модальному вікні
+        if (addWindow.ShowDialog() == true)
         {
-            StatusMessage = $"Не вдалося зберегти картку: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
+            try
+            {
+                IsLoading = true;
+                StatusMessage = "Збереження в базу даних...";
+
+                var newItem = new MediaItem
+                {
+                    Id = Guid.NewGuid(),
+                    Title = addWindow.ItemTitle,
+                    Type = addWindow.MediaType,
+                    Status = addWindow.Status,
+                    PosterUrl = addWindow.PosterUrl,
+                    Description = addWindow.Note,
+                    Tags = addWindow.Tags,
+                    Rating = addWindow.Status == "Завершено" ? addWindow.Rating : (int?)null,
+                    Review = addWindow.Status == "Завершено" ? addWindow.Review : string.Empty,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await using var db = await _dbContextFactory.CreateDbContextAsync();
+                db.MediaItems.Add(newItem);
+                await db.SaveChangesAsync();
+
+                // Додаємо картку на початок списку в UI
+                Items.Insert(0, newItem);
+                StatusMessage = $"Картку «{newItem.Title}» успішно збережено!";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Не вдалося зберегти картку: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 
