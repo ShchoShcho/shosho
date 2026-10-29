@@ -6,10 +6,10 @@
         xmlns:viewModels="clr-namespace:ShoSho.UI.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel, IsDesignTimeCreatable=True}"
-        Title="Шо-Шо | Каталог вражень" Height="780" Width="1200"
-        MinHeight="650" MinWidth="1000"
+        Title="Шо-Шо | Каталог вражень" Height="760" Width="1100"
+        MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
-        Background="#F8F4ED"
+        Background="#F5EFE6"
         FontFamily="Segoe UI">
 
     <Window.Resources>
@@ -18,12 +18,15 @@
             <Setter Property="BorderBrush" Value="#E0D6C8" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="#322824" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="14,10" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
                         </Border>
                     </ControlTemplate>
@@ -128,6 +131,10 @@
     </Window.Resources>
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5*"/>
+            <RowDefinition Height="243*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260" />
             <ColumnDefinition Width="*" />
@@ -188,9 +195,15 @@
         <Grid Grid.Column="1" Margin="48,40,48,24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <!-- 0: Заголовок -->
                 <RowDefinition Height="Auto" />
+                <!-- 1: Вкладки фільтрів -->
+                <RowDefinition Height="Auto" />
+                <!-- 2: Поле вводу -->
                 <RowDefinition Height="*" />
+                <!-- 3: Сітка карток -->
                 <RowDefinition Height="Auto" />
+                <!-- 4: Статус-бар -->
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Margin="0,0,0,32">
