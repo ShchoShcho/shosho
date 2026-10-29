@@ -1,0 +1,37 @@
+<Window x:Class="ShoSho.UI.AddItemWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Додати бажанку" Width="480" Height="700"
+        WindowStartupLocation="CenterOwner" Background="#F5EFE6">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24">
+            <StackPanel.Resources>
+                <Style TargetType="TextBox"><Setter Property="Padding" Value="8"/><Setter Property="Margin" Value="0,4,0,12"/></Style>
+                <Style TargetType="ComboBox"><Setter Property="Padding" Value="8"/><Setter Property="Margin" Value="0,4,0,12"/></Style>
+            </StackPanel.Resources>
+            <TextBlock Text="Назва"/>
+            <TextBox x:Name="TitleInput" MaxLength="255"/>
+            <TextBlock Text="Тип"/>
+            <ComboBox x:Name="TypeInput"/>
+            <TextBlock Text="Статус"/>
+            <ComboBox x:Name="StatusInput" SelectionChanged="StatusChanged"/>
+            <TextBlock Text="Посилання або шлях до обкладинки"/>
+            <TextBox x:Name="PosterInput" MaxLength="1000"/>
+            <TextBlock Text="Теги (через кому або #)"/>
+            <TextBox x:Name="TagsInput"/>
+            <TextBlock Text="Нотатка"/>
+            <TextBox x:Name="NoteInput" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap" Height="65"/>
+            <StackPanel x:Name="ReviewPanel" Visibility="Collapsed">
+                <TextBlock Text="Оцінка (1–5, необов’язково)"/>
+                <TextBox x:Name="RatingInput"/>
+                <TextBlock Text="Відгук"/>
+                <TextBox x:Name="ReviewInput" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap" Height="65"/>
+            </StackPanel>
+            <TextBlock x:Name="ErrorText" Foreground="#A33D32" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Скасувати" IsCancel="True" Padding="16,8" Margin="0,0,8,0"/>
+                <Button Content="Зберегти" Click="SaveClicked" IsDefault="True" Padding="16,8" Background="#C27A63" Foreground="White"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

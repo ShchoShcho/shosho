@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,59 +10,22 @@ namespace ShoSho.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_MediaItemTag_Tag_TagsId",
-                table: "MediaItemTag");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_Tag",
-                table: "Tag");
-
-            migrationBuilder.RenameTable(
-                name: "Tag",
-                newName: "Tags");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_Tags",
-                table: "Tags",
-                column: "Id");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_MediaItemTag_Tags_TagsId",
-                table: "MediaItemTag",
-                column: "TagsId",
-                principalTable: "Tags",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+            // Merge the alternate branch's tag tables without losing assignments.
+            migrationBuilder.Sql("""
+                INSERT OR IGNORE INTO "Tags" ("Id", "Name") SELECT "Id", "Name" FROM "Tag";
+                INSERT OR IGNORE INTO "ItemTag" ("MediaItemsId", "TagsId")
+                    SELECT link."MediaItemsId", canonical."Id"
+                    FROM "MediaItemTag" link JOIN "Tag" old ON old."Id" = link."TagsId"
+                    JOIN "Tags" canonical ON canonical."Name" = old."Name";
+                DROP TABLE "MediaItemTag";
+                DROP TABLE "Tag";
+                """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_MediaItemTag_Tags_TagsId",
-                table: "MediaItemTag");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_Tags",
-                table: "Tags");
-
-            migrationBuilder.RenameTable(
-                name: "Tags",
-                newName: "Tag");
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_Tag",
-                table: "Tag",
-                column: "Id");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_MediaItemTag_Tag_TagsId",
-                table: "MediaItemTag",
-                column: "TagsId",
-                principalTable: "Tag",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+            throw new System.NotSupportedException("The merged tag schema cannot be downgraded safely.");
         }
     }
 }
