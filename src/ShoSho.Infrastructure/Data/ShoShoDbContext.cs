@@ -13,14 +13,9 @@ public class ShoShoDbContext : DbContext
     public DbSet<MediaItem> MediaItems { get; set; } = null!;
     public DbSet<Tag> Tags { get; set; } = null!;
 
-    public ShoShoDbContext()
-    {
-    }
+    public ShoShoDbContext() { }
 
-    public ShoShoDbContext(DbContextOptions<ShoShoDbContext> options)
-        : base(options)
-    {
-    }
+    public ShoShoDbContext(DbContextOptions<ShoShoDbContext> options) : base(options) { }
 
     public static void Configure(DbContextOptionsBuilder optionsBuilder, string connectionString)
     {
@@ -71,5 +66,17 @@ public class ShoShoDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
             entity.HasIndex(e => e.Name).IsUnique();
         });
+
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<MediaItem>()
+            .HasMany(m => m.Tags)
+            .WithMany(t => t.MediaItems)
+            .UsingEntity(j => j.ToTable("ItemTag"));
     }
 }

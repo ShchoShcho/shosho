@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
+    [ObservableProperty]
+    private string _searchTagFilter = string.Empty;
+
     public ObservableCollection<MediaItem> Items { get; } = new();
 
     public MainViewModel(IDbContextFactory<ShoShoDbContext> dbContextFactory)
@@ -38,6 +42,28 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
         : this(new DesignTimeDbContextFactory())
     {
+    }
+
+    partial void OnSearchTagFilterChanged(string value)
+    {
+        var view = CollectionViewSource.GetDefaultView(Items);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            view.Filter = null;
+        }
+        else
+        {
+            var searchTarget = value.Trim().ToLower();
+            view.Filter = obj =>
+            {
+                if (obj is MediaItem item)
+                {
+                    return item.Tags.Any(t => t.Name.ToLower().Contains(searchTarget));
+                }
+                return false;
+            };
+        }
     }
 
     [RelayCommand]

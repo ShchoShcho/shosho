@@ -2,10 +2,10 @@ namespace ShoSho.Core.Models;
 
 public enum MediaStatus
 {
-    Planned,    // В планах
-    InProgress, // В процесі
-    Completed,  // Завершено
-    Postponed   // Відкладено
+    Planned,    
+    InProgress, 
+    Completed,  
+    Postponed   
 }
 
 public static class MediaStatusExtensions

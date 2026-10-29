@@ -15,21 +15,28 @@ namespace ShoSho.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("MediaItemTag", b =>
                 {
                     b.Property<Guid>("MediaItemsId")
                         .HasColumnType("TEXT");
 
+            modelBuilder.Entity("MediaItemTag", b =>
+                {
+                    b.Property<Guid>("MediaItemsId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TagsId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("MediaItemsId", "TagsId");
 
                     b.HasIndex("TagsId");
 
-                    b.ToTable("MediaItemTag");
+                    b.ToTable("ItemTag", (string)null);
                 });
 
             modelBuilder.Entity("ShoSho.Core.Models.MediaItem", b =>
@@ -69,12 +76,12 @@ namespace ShoSho.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
