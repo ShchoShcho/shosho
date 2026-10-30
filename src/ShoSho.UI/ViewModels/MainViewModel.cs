@@ -125,6 +125,7 @@ public partial class MainViewModel : ObservableObject
         var view = CollectionViewSource.GetDefaultView(Items);
 
         var search = SearchText.Trim();
+        var tagSearch = SearchTagFilter.Trim();
         var category = SelectedCategory;
         var status = SelectedStatusFilter;
         var selectedTags = AvailableTags.Where(t => t.IsSelected).Select(t => t.Name).ToList();
@@ -139,6 +140,8 @@ public partial class MainViewModel : ObservableObject
             if (search.Length > 0 &&
                 (item.Title ?? string.Empty).IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0)
                 return false;
+            if (tagSearch.Length > 0 && !item.Tags.Any(t =>
+                t.Name.Contains(tagSearch, StringComparison.OrdinalIgnoreCase))) return false;
 
             return selectedTags.All(sel =>
                 item.Tags.Any(t => string.Equals(t.Name, sel, StringComparison.OrdinalIgnoreCase)));
@@ -451,6 +454,8 @@ public partial class MainViewModel : ObservableObject
         await using var db = await _dbContextFactory.CreateDbContextAsync();
         var stored = await db.MediaItems.Include(x => x.Tags).Include(x => x.Review)
             .SingleAsync(x => x.Id == draft.Id);
+        ShoSho.Core.Services.ReviewRules.ValidateChange(draft.Status, draft.Rating, draft.ReviewText,
+            stored.Review?.Rating ?? stored.Rating, stored.Review?.Text ?? string.Empty);
         var tags = await ResolveTagsAsync(db, draft.Tags);
         stored.Title = draft.Title.Trim();
         stored.Type = draft.MediaType;
@@ -561,6 +566,10 @@ public partial class MainViewModel : ObservableObject
 
             var existingReview = await db.Reviews
                 .FirstOrDefaultAsync(r => r.MediaItemId == item.Id);
+
+            var stored = await db.MediaItems.SingleAsync(m => m.Id == item.Id);
+            ShoSho.Core.Services.ReviewRules.ValidateChange(stored.Status, item.Review.Rating, item.Review.Text,
+                existingReview?.Rating ?? stored.Rating, existingReview?.Text ?? string.Empty);
 
             if (existingReview != null)
             {

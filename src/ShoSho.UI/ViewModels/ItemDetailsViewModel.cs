@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShoSho.Core.Models;
+using ShoSho.Core.Services;
 using System.Windows;
 
 namespace ShoSho.UI.ViewModels;
@@ -9,6 +10,9 @@ public partial class ItemDetailsViewModel : ObservableObject
 {
     private readonly Func<ItemDetailsViewModel, Task> _save;
     private readonly Func<ItemDetailsViewModel, Task>? _delete;
+    private readonly int? _originalRating;
+    private readonly string _originalReviewText;
+    public bool CanEditReview => ReviewRules.CanEdit(Status);
     
     public Guid Id { get; }
     public string? CoverSource { get; }
@@ -23,6 +27,7 @@ public partial class ItemDetailsViewModel : ObservableObject
     private string _mediaType = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanEditReview))]
     private string _status = string.Empty;
 
     [ObservableProperty]
@@ -68,6 +73,8 @@ public partial class ItemDetailsViewModel : ObservableObject
         _tags = string.Join(", ", item.Tags.Select(t => t.Name));
         _rating = item.Review?.Rating ?? item.Rating;
         _reviewText = item.Review?.Text ?? string.Empty;
+        _originalRating = _rating;
+        _originalReviewText = _reviewText;
         MediaTypes = new[] { "Книга", "Фільм", "Серіал", "Гра", "Інше", item.Type }.Distinct().ToArray();
         Statuses = Enum.GetValues<MediaStatus>().Select(s => s.ToDisplayName()).Append(item.Status).Distinct().ToArray();
         _save = save;
@@ -80,7 +87,7 @@ public partial class ItemDetailsViewModel : ObservableObject
     [RelayCommand]
     public async Task DeleteAsync()
     {
-        if (_delete == null) return;
+        if (_delete == null || IsSaving) return;
 
         var result = MessageBox.Show(
             $"Ви дійсно бажаєте видалити запис «{Title}»?",
@@ -123,6 +130,7 @@ public partial class ItemDetailsViewModel : ObservableObject
         { ErrorMessage = "Тег має містити до 50 символів."; return; }
         try
         {
+            ReviewRules.ValidateChange(Status, Rating, ReviewText, _originalRating, _originalReviewText);
             IsSaving = true;
             ErrorMessage = string.Empty;
             await _save(this);

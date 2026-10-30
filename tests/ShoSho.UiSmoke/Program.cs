@@ -99,7 +99,16 @@ internal static class Program
             draft.Saved += () => saved = true;
             vm.SelectedStatusFilter = MediaStatusExtensions.Completed;
             Pump(draft.SaveAsync());
+            Check(!saved && draft.ErrorMessage.Contains("Вже всьо"), "Review changed on unfinished content.");
+            draft.Status = MediaStatusExtensions.Completed;
+            Pump(draft.SaveAsync());
             Check(saved && draft.ErrorMessage.Length == 0, draft.ErrorMessage);
+            load = vm.LoadItemDetailsAsync(vm.Items.Single(x => x.Id == first.Id));
+            Pump(load);
+            draft = load.Result;
+            draft.Status = MediaStatusExtensions.InProgress;
+            Pump(draft.SaveAsync());
+            Check(draft.ErrorMessage.Length == 0 && !draft.CanEditReview, "Status change must preserve existing review.");
             Check(!view.Cast<MediaItem>().Any(x => x.Id == first.Id), "Saved status did not refresh filters.");
             using (var db = factory.CreateDbContext())
             {
@@ -125,6 +134,17 @@ internal static class Program
             Pump(failingDraft.SaveAsync());
             Check(failingDraft.ErrorMessage.Contains("Test write failure") && !failingDraft.IsSaving,
                 "Save failure did not leave the draft available for retry.");
+            first.Review!.Text = "Спроба обійти перевірку через стару команду";
+            Pump(vm.SaveReviewAsync(first));
+            using (var db = factory.CreateDbContext())
+                Check(db.Reviews.Single().Text == "Оновлений відгук",
+                    "Legacy review command bypassed the persisted status rule.");
+            var unexpectedSave = false;
+            var wishlist = new ItemDetailsViewModel(new MediaItem { Title = "Бажанка" }, null,
+                _ => { unexpectedSave = true; return Task.CompletedTask; });
+            wishlist.Rating = 4;
+            Pump(wishlist.SaveAsync());
+            Check(!unexpectedSave && wishlist.ErrorMessage.Length > 0, "Wishlist accepted a new rating.");
             vm.SelectedStatusFilter = "Усі";
             // Construct and lay out the real XAML without showing a desktop window.
             var window = new MainWindow(vm);

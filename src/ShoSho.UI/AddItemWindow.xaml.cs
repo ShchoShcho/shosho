@@ -60,7 +60,7 @@ public partial class AddItemWindow : Window
         else
         {
             if (TitleErrorText != null) TitleErrorText.Visibility = Visibility.Collapsed;
-            TitleInput.BorderBrush = (Brush)new BrushConverter().ConvertFrom("#E0D6C8");
+            TitleInput.BorderBrush = new SolidColorBrush(Color.FromRgb(0xE0, 0xD6, 0xC8));
             if (SaveButton != null) SaveButton.IsEnabled = true;
             return true;
         }

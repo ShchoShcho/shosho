@@ -579,6 +579,27 @@
                                     <TextBlock Text="{Binding Type}"
                                                Foreground="#8C7A70"
                                                Margin="0,4,0,10"/>
+                                    <TextBlock Foreground="#A47732"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,10">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text"
+                                                        Value="{Binding Review.Rating, StringFormat='★ {0} / 5', TargetNullValue='Без оцінки', FallbackValue='Без оцінки'}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Review.Rating}" Value="{x:Null}">
+                                                        <Setter Property="Text"
+                                                                Value="{Binding Rating, StringFormat='★ {0} / 5', TargetNullValue='Без оцінки'}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Review}" Value="{x:Null}">
+                                                        <Setter Property="Text"
+                                                                Value="{Binding Rating, StringFormat='★ {0} / 5', TargetNullValue='Без оцінки'}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                     <Border Background="#EFE8DD"
                                             CornerRadius="12"
                                             Padding="10,5"

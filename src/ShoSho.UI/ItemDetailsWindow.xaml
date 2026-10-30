@@ -66,9 +66,11 @@
                         <TextBlock Text="Теги настрою (через кому або #)"/>
                         <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Text="Оцінка (необов'язково)"/>
-                        <ComboBox ItemsSource="{Binding Ratings}" SelectedItem="{Binding Rating}"/>
+                        <ComboBox ItemsSource="{Binding Ratings}" SelectedItem="{Binding Rating}" IsEnabled="{Binding CanEditReview}"/>
                         <TextBlock Text="Відгук"/>
-                        <TextBox Text="{Binding ReviewText, UpdateSourceTrigger=PropertyChanged}" MaxLength="2000" MinHeight="100" TextWrapping="Wrap" AcceptsReturn="True"/>
+                        <TextBox Text="{Binding ReviewText, UpdateSourceTrigger=PropertyChanged}" MaxLength="2000" MinHeight="100" TextWrapping="Wrap" AcceptsReturn="True" IsEnabled="{Binding CanEditReview}"/>
+                        <TextBlock Text="Оцінку й відгук можна змінювати для статусу «Вже всьо». Попередні враження зберігаються при зміні статусу."
+                                   TextWrapping="Wrap" Foreground="#8C7A70" FontSize="12"/>
                     </StackPanel>
                 </StackPanel>
             </Grid>
