@@ -24,4 +24,13 @@ public class MediaStatusExtensionsTests
 
         Assert.Equal("Вже всьо", result);
     }
+
+    [Fact]
+    public void MediaStatusExtensions_AllStatuses_ShouldHaveCorrectStringMapping()
+    {
+        Assert.False(string.IsNullOrEmpty(MediaStatusExtensions.Planned));
+        Assert.False(string.IsNullOrEmpty(MediaStatusExtensions.InProgress));
+        Assert.False(string.IsNullOrEmpty(MediaStatusExtensions.Completed));
+        Assert.False(string.IsNullOrEmpty(MediaStatusExtensions.Postponed));
+    }
 }
