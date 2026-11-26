@@ -370,16 +370,11 @@
 
                 <StackPanel Grid.Column="0"
                             VerticalAlignment="Center">
-                    <TextBlock Text="МОЯ КОЛЕКЦІЯ - 2026"
-                               FontSize="11"
-                               Foreground="#A68A77"
-                               FontWeight="Bold"
-                               Margin="0,0,0,8"/>
                     <TextBlock Text="Каталог вражень"
                                FontSize="36"
                                FontFamily="Georgia"
                                Foreground="#2B231F"/>
-                    <TextBlock Text="Фільми, книжки й світи, до яких хочеться повернутися."
+                    <TextBlock Text="Цікаві штуки, до яких хочеться повернутися."
                                FontSize="14"
                                Foreground="#7C6D65"
                                Margin="0,8,0,0"/>
