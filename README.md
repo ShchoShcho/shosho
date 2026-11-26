@@ -1,5 +1,7 @@
 # ShoSho
 
+[![CI](https://github.com/ShchoShcho/shosho/actions/workflows/ci.yml/badge.svg)](https://github.com/ShchoShcho/shosho/actions/workflows/ci.yml)
+
 Шо-шо ми таке:
 
 WPF-застосунок для локальної колекції медіа. База даних — SQLite через Entity Framework Core 10.
