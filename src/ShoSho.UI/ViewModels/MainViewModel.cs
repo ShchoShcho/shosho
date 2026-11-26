@@ -306,7 +306,10 @@ public partial class MainViewModel : ObservableObject
             StatusMessage = "Підключення до бази даних...";
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            await db.Database.MigrateAsync();
+            if (db.Database.IsRelational())
+            {
+                await db.Database.MigrateAsync();
+            }
 
             var items = await db.MediaItems
                 .Include(m => m.Tags)

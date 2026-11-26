@@ -8,4 +8,5 @@
     <Project Path="tests/ShoSho.SqliteSmoke/ShoSho.SqliteSmoke.csproj" />
     <Project Path="tests/ShoSho.UiSmoke/ShoSho.UiSmoke.csproj" />
   </Folder>
+  <Project Path="ShoSho.Tests/ShoSho.Tests.csproj" Id="79a887ee-5a9a-482d-8d7f-2c04f924aed9" />
 </Solution>
